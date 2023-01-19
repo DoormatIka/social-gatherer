@@ -1,0 +1,23 @@
+{
+  "name": "social-gatherer",
+  "version": "0.0.1",
+  "description": "A library that takes data from YouTube, Twitter and etc. We also have persistent events which are indexed on time, so if you closed the program and reopened it: it will read everything from the time you closed the program.",
+  "main": "index.js",
+  "scripts": {
+    "ts-start": "ts-node --esm ./src/ts/index.ts",
+    "js-start": "node ./src/js/index.js",
+    "build": "rm -rf ./src/js/* && tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "DoormatIka",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "twitter-api-v2": "^1.14.0",
+    "typed-emitter": "^2.1.0",
+    "yt-channel-info": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.18"
+  }
+}
