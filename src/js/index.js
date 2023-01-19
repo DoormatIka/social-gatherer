@@ -1,20 +1,8 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const yt_js_1 = require("./lib/yt.js");
+const twitter_js_1 = require("./lib/twitter.js");
+exports.default = {
+    YouTubeChannel: yt_js_1.YouTubeChannel,
+    TwitterUser: twitter_js_1.TwitterUser
 };
-import { YouTubeChannel } from "./lib/yt.js";
-function main() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const penguinz0 = new YouTubeChannel("penguinz0", 3000);
-        yield penguinz0.validate();
-        // listen to the upload of the penguinz0 channel
-        const listen = yield penguinz0.getVideoListener(false);
-        listen.on("newUpload", n => console.log(n));
-    });
-}
-main().then(() => { });

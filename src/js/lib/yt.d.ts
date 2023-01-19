@@ -1,11 +1,15 @@
 import TypedEmitter from "typed-emitter";
 type YouTubeEvents = {
     newUpload: (info: string) => void;
-    subscribeMilestone: () => void;
+    subscribeMilestone: (milestone: number, subscriberCount: number) => void;
 };
-export type Memory = {
+export type YoutubeMemory = {
     channelID: string;
     previousVideoID: string;
+    milestones: {
+        prev: number | null;
+        next: number | null;
+    };
 };
 /**
  * makes a YouTube class to use for events
@@ -20,6 +24,7 @@ export declare class YouTubeChannel {
     channelID: string;
     msRefresh: number;
     private innateMemory;
+    private subCount;
     constructor(channelID: string, msRefresh: number);
     /**
      * validates the channelID
@@ -29,20 +34,23 @@ export declare class YouTubeChannel {
     validate(): Promise<boolean>;
     /**
      * repeatedly checks if you uploaded
+     * SHOULD ONLY BE CALLED ONCE
      * @returns - an EventEmitter. Use it to run `event.on()`
      * @example
      * ```js
-     * ... made the YouTubeChannel object ...
+     * // ... made the YouTubeChannel object ...
      *
      * const listener = await channel.getVideoListener();
      * // listen to the newUpload event
      * listener.on("newUpload", payload => console.log(payload));
      * ```
      */
-    getVideoListener(isMocked: boolean): Promise<TypedEmitter<YouTubeEvents>>;
+    getVideoListener(): Promise<TypedEmitter<YouTubeEvents>>;
+    recordSubscriberMilestones(): Promise<TypedEmitter<YouTubeEvents>>;
     private getVideos;
+    private getSubscriberCount;
     private mockedGetVideos;
+    private mockedGetSubscriberCount;
     private getVideoBufferedListener;
-    private recordSubscriberMilestones;
 }
 export {};

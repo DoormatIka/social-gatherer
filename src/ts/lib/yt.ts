@@ -14,12 +14,14 @@ export type YoutubeMemory = {
         next: number | null
     }
 }
-const subscriberMilestones: number[] = []
+let subscriberMilestones: number[] = []
 let subBase = 1000;
-for (let i = 1; i < 10; i++) {
+for (let i = 1; i < 13; i++) {
     subscriberMilestones.push(subBase);
     if (i % 2) subBase *= 5; else subBase *= 2;
-}
+} // up to 500,000,000
+
+console.log(subscriberMilestones);
 /**
  * makes a YouTube class to use for events
  * @param channelID - possible options:
@@ -83,10 +85,11 @@ export class YouTubeChannel {
             const items = data.items.length;
             if (items > 0) {
                 const recentVideo = data.items[0];
-                if (
-                    this.innateMemory.previousVideoID.length == 0 ||
-                    this.innateMemory.previousVideoID !== recentVideo.videoId
-                ) {
+                if (this.innateMemory.previousVideoID.length == 0) {
+                    this.innateMemory.previousVideoID = recentVideo.videoId;
+                }
+
+                if (this.innateMemory.previousVideoID !== recentVideo.videoId) {
                     this.innateMemory.previousVideoID = recentVideo.videoId;
                     e.emit("newUpload", recentVideo.videoId);
                 }
@@ -116,6 +119,11 @@ export class YouTubeChannel {
             }
         }, this.msRefresh);
         return e;
+    }
+
+    addMilestone(milestone: number) {
+        subscriberMilestones.push(milestone);
+        subscriberMilestones = subscriberMilestones.sort();
     }
 
     private async getVideos() {
