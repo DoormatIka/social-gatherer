@@ -1,7 +1,7 @@
 import YTCH from "yt-channel-info";
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
-    
+
 type YouTubeEvents = {
     newUpload: (info: string) => void,
     subscribeMilestone: (milestone: number, subscriberCount: number) => void
