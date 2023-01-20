@@ -47,6 +47,9 @@ export class YouTubeChannel {
                 next: null
             }
         };
+        if (msRefresh < 10000) {
+            console.log(`[WARN] {YouTubeChannel}: msRefresh (${msRefresh}ms) is under 10000ms / 10s.`)
+        }
     }
     /**
      * validates the channelID
@@ -97,7 +100,19 @@ export class YouTubeChannel {
         }, this.msRefresh);
         return e;
     }
-    
+    /**
+     * repeatedly checks if you hit a subscriber milestone 
+     * SHOULD ONLY BE CALLED ONCE
+     * @returns - an EventEmitter. Use it to run `event.on()`
+     * @example
+     * ```js
+     * // .. created YoutubeChannel object ..
+     * const subscribe = await channel.recordSubscriberMilestones();
+     * subscribe.on("subscribeMilestone", (milestone, subscribeCount) => {
+     *     // do things with the variables here
+     * }
+     * ```
+     */
     async recordSubscriberMilestones() {
         const e = makeEvent();
         setInterval(async () => {
