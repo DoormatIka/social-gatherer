@@ -21,7 +21,6 @@ for (let i = 1; i < 13; i++) {
     if (i % 2) subBase *= 5; else subBase *= 2;
 } // up to 500,000,000
 
-console.log(subscriberMilestones);
 /**
  * makes a YouTube class to use for events
  * @param channelID - possible options:
@@ -135,7 +134,10 @@ export class YouTubeChannel {
         }, this.msRefresh);
         return e;
     }
-
+    /**
+     * add a milestone for recordSubscriberMilestones() to celebrate
+     * @param milestone - the milestone (100 000, 200 000, etc)
+     */
     addMilestone(milestone: number) {
         subscriberMilestones.push(milestone);
         subscriberMilestones = subscriberMilestones.sort();

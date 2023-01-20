@@ -33,10 +33,10 @@ export class TwitterUser {
      * listens to events that happens in Twitter accounts every msRefresh
      * @returns - An EventEmitter
      */
-    async getTweetListener() {
+    async getTweetListener(options?: { includeReplies: boolean, includeRetweets: boolean }) {
         const e = makeEvent();
         setInterval(async () => {
-            const tweets = await this.getUserTweets();
+            const tweets = await this.getUserTweets(options);
             const currentTweet = tweets.data.at(0);
             if (!currentTweet) return;
 
@@ -56,11 +56,18 @@ export class TwitterUser {
         return e;
     }
 
-    private async getUserTweets() {
+    private async getUserTweets(options?: { includeReplies: boolean, includeRetweets: boolean }) {
+        const excluded: ("replies"|"retweets")[] = [];
+        if (options) {
+            const { includeReplies, includeRetweets } = options;
+            if (!includeReplies ) excluded.push("replies");
+            if (!includeRetweets) excluded.push("retweets")
+        }
+
         const id = (await this.client.v2.userByUsername(this.userId)).data.id;
         const tweets = await this.client.v2.userTimeline(id, {
             max_results: 5,
-            exclude: ["replies", "retweets"],
+            exclude: excluded || ["replies", "retweets"],
         })
         return tweets.data;
     }
