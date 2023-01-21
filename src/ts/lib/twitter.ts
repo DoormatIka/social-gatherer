@@ -1,4 +1,4 @@
-import { TwitterApi, TwitterApiReadOnly, TweetV2PaginableTimelineResult } from "twitter-api-v2";
+import { TwitterApi, TwitterApiReadOnly } from "twitter-api-v2";
 import EventEmitter from "events"
 import TypedEmitter from "typed-emitter"
 
