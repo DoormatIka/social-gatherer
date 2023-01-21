@@ -13,7 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^1.2.3",
-    "puppeteer": "^19.5.2",
+    "lowdb": "^5.0.5",
     "twitter-api-v2": "^1.14.0",
     "typed-emitter": "^2.1.0",
     "yt-channel-info": "^3.2.1"
