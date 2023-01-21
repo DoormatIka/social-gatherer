@@ -30,18 +30,3 @@ async function main() {
     console.log(response.data)
 }
 main();
-/*
-axios.post("https://id.twitch.tv/oauth2/token", {
-    client_id: "ugleed71t34dgjurz2j2vvrm7r4ook",
-    client_secret: "avljsalr3s891l7w1d8i0hlfsp4qhy",
-    code: "17038swieks1jh1hwcdr36hekyui",
-    grant_type: "authorization_code",
-    redirect_uri: "http://localhost"
-}, {
-    "headers": {
-        "setContentType": 
-    }
-}).then(e => {
-    console.log(e.data)
-})
-*/
