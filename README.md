@@ -39,3 +39,10 @@ async function main() {
 
 #### Getting the APIs
 [Twitter API](https://developer.twitter.com/en/docs/twitter-api/getting-started/getting-access-to-the-twitter-api)
+
+#### Supported Websites
+Incomplete Functionality:
+Everything.
+
+Complete Functionality:
+None, yet.
