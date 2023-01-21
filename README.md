@@ -3,6 +3,7 @@ social-gatherer is a wrapper for popular social media apps. It introduces new me
 
 ## Important
 Work in Progress!
+I should add a no-API option..
 
 ## Installation
 Requirements: `node, git, and patience`
