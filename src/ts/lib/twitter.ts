@@ -34,7 +34,7 @@ export class TwitterUser {
      * @returns - An EventEmitter
      */
     async getTweetListener(options?: { includeReplies: boolean, includeRetweets: boolean }) {
-        const e = makeEvent();
+        const e = new EventEmitter() as TypedEmitter<TwitEvents>;
         setInterval(async () => {
             const tweets = await this.getUserTweets(options);
             const currentTweet = tweets.data.at(0);
@@ -71,8 +71,4 @@ export class TwitterUser {
         })
         return tweets.data;
     }
-}
-
-function makeEvent() {
-    return new EventEmitter() as TypedEmitter<TwitEvents>
 }
