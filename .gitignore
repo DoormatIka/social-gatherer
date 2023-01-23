@@ -2,3 +2,4 @@ node_modules
 secrets/*
 src/js/*
 package-lock.json
+init.json

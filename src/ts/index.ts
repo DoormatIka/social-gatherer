@@ -1,6 +1,6 @@
-import { YouTubeChannel } from "./lib/yt";
-import { TwitterUser } from "./lib/twitter";
-import { TwitchUser, TokenManager } from "./lib/twitch";
+import { YouTubeChannel } from "./lib/socials/yt";
+import { TwitterUser } from "./lib/socials/twitter";
+import { TwitchUser, TokenManager } from "./lib/socials/twitch";
 // REMOVE THIS TO AVOID EXPOSING API.JSON
 // import api from "../../secrets/api.json"
 const social_gatherer = {

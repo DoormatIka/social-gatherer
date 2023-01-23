@@ -6,8 +6,15 @@ type TwitEvents = {
     tweeted: (text: string, sensitive?: boolean) => void
 }
 
-type TwitMemory = {
-    tweet_id: string
+type TwitterMemory = {
+    tweet_id: string,
+}
+
+export type TwitterJSON = {
+    userId: string,
+    msRefresh: number,
+    innateMemory: TwitterMemory,
+    bearerToken: string,
 }
 /**
  * Twitter class to interact with the Twitter API
@@ -19,7 +26,7 @@ type TwitMemory = {
  */
 export class TwitterUser {
     private client: TwitterApiReadOnly
-    private innateMemory: TwitMemory
+    private innateMemory: TwitterMemory
     constructor(
         bearerToken: string,
         public userId: string,
@@ -54,6 +61,13 @@ export class TwitterUser {
         }, this.msRefresh)
         
         return e;
+    }
+    /**
+     * Do not use this. It's 
+     * @param memory - The memory of the Twitter Object
+     */
+    setTwitterMemory(memory: TwitterMemory) {
+        this.innateMemory = memory;
     }
 
     private async getUserTweets(options?: { includeReplies: boolean, includeRetweets: boolean }) {

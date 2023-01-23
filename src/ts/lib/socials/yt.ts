@@ -14,7 +14,7 @@ export type YoutubeMemory = {
         next: number | null
     }
 }
-let subscriberMilestones: number[] = []
+const subscriberMilestones: number[] = []
 let subBase = 1000;
 for (let i = 1; i < 13; i++) {
     subscriberMilestones.push(subBase);
@@ -32,8 +32,6 @@ for (let i = 1; i < 13; i++) {
  */
 export class YouTubeChannel {
     private innateMemory: YoutubeMemory
-    // debug variables
-    private subCount: number = 0;
     constructor(
         public channelID: string,
         public msRefresh: number,
@@ -134,14 +132,6 @@ export class YouTubeChannel {
         }, this.msRefresh);
         return e;
     }
-    /**
-     * add a milestone for recordSubscriberMilestones() to celebrate
-     * @param milestone - the milestone (100 000, 200 000, etc)
-     */
-    addMilestone(milestone: number) {
-        subscriberMilestones.push(milestone);
-        subscriberMilestones = subscriberMilestones.sort();
-    }
 
     private async getVideos() {
         const vids = await YTCH.getChannelVideos({
@@ -156,33 +146,6 @@ export class YouTubeChannel {
             channelId: this.channelID,
         })
         return stats.subscriberCount;
-    }
-
-    // developer functions
-    private async mockedGetVideos(seconds: number) {
-        type Video = {
-            items: { videoId: string }[]
-        };
-        // non-blocking timer
-        const p = new Promise<Video>((res, rej) => {
-            setTimeout(() => {
-                const aigo: Video = { items: [] }
-                aigo.items.push({ videoId: Date.now().toString()});
-                res(aigo)
-            }, seconds * 1000)
-        })
-        return p;
-    }
-
-    private async mockedGetSubscriberCount(addedSubscribers: number) {
-        const p = new Promise<number>((res, rej) => {
-            setTimeout(() => {
-                this.subCount += addedSubscribers + 598;
-                console.log(this.subCount)
-                res(this.subCount);
-            }, 500)
-        })
-        return p;
     }
 
     private async getVideoBufferedListener() {
