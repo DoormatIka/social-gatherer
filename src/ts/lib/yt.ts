@@ -6,7 +6,7 @@ type YouTubeEvents = {
     newUpload: (info: string) => void,
     subscribeMilestone: (milestone: number, subscriberCount: number) => void
 }
-export type YoutubeMemory = {
+type YoutubeMemory = {
     channelID: string,
     previousVideoID: string,
     milestones: {
@@ -14,6 +14,8 @@ export type YoutubeMemory = {
         next: number | null
     }
 }
+
+
 const subscriberMilestones: number[] = []
 let subBase = 1000;
 for (let i = 1; i < 13; i++) {
@@ -147,12 +149,6 @@ export class YouTubeChannel {
         })
         return stats.subscriberCount;
     }
-
-    private async getVideoBufferedListener() {
-        // bufferedListeners go in the wrapper class
-        // When the bot powers down
-        // TODO: private for now
-    } 
 }
 
 function getMilestoneFromSubscriberCount(subMilestones: number[], subCount: number) {

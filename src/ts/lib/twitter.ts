@@ -22,9 +22,10 @@ export type TwitterJSON = {
  * @param userId - the username found here: https://twitter.com/[userId]
  * @param msRefresh - how many times it will update the API (with getTweetListener)
  * 
- * Recommended msRefresh: 10000ms / 10s
+ * Recommended msRefresh: 30000ms / 30s
  */
 export class TwitterUser {
+    private event: TypedEmitter<TwitEvents>
     private client: TwitterApiReadOnly
     private innateMemory: TwitterMemory
     constructor(
@@ -35,13 +36,16 @@ export class TwitterUser {
         const t = new TwitterApi(bearerToken);
         this.client = t.readOnly;
         this.innateMemory = { tweet_id: "" };
+        this.event = new EventEmitter() as TypedEmitter<TwitEvents>
     }
     /**
      * listens to events that happens in Twitter accounts every msRefresh
+     * 
+     * streams weren't used since they had rate limits
      * @returns - An EventEmitter
+     * 
      */
     async getTweetListener(options?: { includeReplies: boolean, includeRetweets: boolean }) {
-        const e = new EventEmitter() as TypedEmitter<TwitEvents>;
         setInterval(async () => {
             const tweets = await this.getUserTweets(options);
             const currentTweet = tweets.data.at(0);
@@ -55,19 +59,12 @@ export class TwitterUser {
 
             // if memory tweetId is not equal to current tweetId
             if (this.innateMemory.tweet_id !== currentTweet.id) {
-                e.emit("tweeted", currentTweet.text, currentTweet.possibly_sensitive); 
+                this.event.emit("tweeted", currentTweet.text, currentTweet.possibly_sensitive); 
                 this.innateMemory.tweet_id = currentTweet.id;
             }
         }, this.msRefresh)
-        
-        return e;
-    }
-    /**
-     * Do not use this. It's 
-     * @param memory - The memory of the Twitter Object
-     */
-    setTwitterMemory(memory: TwitterMemory) {
-        this.innateMemory = memory;
+
+        return this.event;
     }
 
     private async getUserTweets(options?: { includeReplies: boolean, includeRetweets: boolean }) {

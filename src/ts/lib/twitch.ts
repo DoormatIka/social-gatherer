@@ -68,6 +68,7 @@ export class TwitchUser {
                 streamInfo.thumbnail_url
             )
         }, this.msRefresh)
+        return this.event;
     }
 
     private async getStream() {
