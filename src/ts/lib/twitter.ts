@@ -1,15 +1,19 @@
 import { TwitterApi, TwitterApiReadOnly, TweetV2PaginableTimelineResult } from "twitter-api-v2";
+import { ExternalStorage } from "./buffer"
+import api from "../../../secrets/api.json"
+
 import EventEmitter from "events"
 import TypedEmitter from "typed-emitter"
-import { Storage } from "./buffer"
 
 type TwitEvents = {
-    tweeted: (text: string, sensitive?: boolean) => void
+    tweeted: (text: string, sensitive?: boolean) => void,
+
 }
 
 type TwitterMemory = {
     // to be stored in database
     tweet_id: string,
+    time: string
 }
 
 export type TwitterJSON = {
@@ -38,7 +42,7 @@ export class TwitterUser {
     ) {
         const t = new TwitterApi(bearerToken);
         this.client = t.readOnly;
-        this.innateMemory = { tweet_id: "" };
+        this.innateMemory = { tweet_id: "", time: "" };
         this.event = new EventEmitter() as TypedEmitter<TwitEvents>
     }
     /**
@@ -59,7 +63,6 @@ export class TwitterUser {
                 this.innateMemory.tweet_id = currentTweet.id;
                 return;
             }
-
             // if memory tweetId is not equal to current tweetId
             if (this.innateMemory.tweet_id !== currentTweet.id) {
                 this.event.emit("tweeted", currentTweet.text, currentTweet.possibly_sensitive); 
@@ -75,43 +78,32 @@ export class TwitterUser {
     }
 
     public async getUserTweets(
-        options?: { 
-            includeReplies: boolean, 
-            includeRetweets: boolean 
-        }, sinceID?: string) {
-        const excluded: ("replies"|"retweets")[] = [];
-        if (options) {
-            const { includeReplies, includeRetweets } = options;
-            if (!includeReplies ) excluded.push("replies");
-            if (!includeRetweets) excluded.push("retweets")
-        }
-
-        const id = (await this.client.v2.userByUsername(this.userId)).data.id;
-        const tweets = await this.client.v2.userTimeline( id, {
-            max_results: 5,
-            exclude: excluded || ["replies", "retweets"],
-            since_id: sinceID
-        })
-        return tweets.data;
-    }
-
-    private async getDelayedTweets(
         options?: {
             includeReplies: boolean, 
             includeRetweets: boolean 
         }) {
-        while (true) {
-            const tweets = await this.getUserTweets(options, this.innateMemory.tweet_id); 
-            if (tweets.data.length === 0) {
-                break;
-            }
-            // what's the stopping condition for tweets, tests needed
-            this.innateStorage.push(tweets)
-            // this.buffer.add()
-            // the storage is supposed to store the last tweet_id to database
-            // the "memory" of the object should be the storage for bufferedTweets
+
+        const included: ("replies"|"retweets")[] = ["replies", "retweets"];
+        if (options) {
+            const { includeReplies, includeRetweets } = options;
+            if (includeReplies ) included.splice(0, 1);
+            if (includeRetweets) included.splice(1, 1);
         }
+        const user = await this.client.v2.userByUsername(this.userId)
+        const id = user.data.id;
+
+        // this function returns the user's post history
+        const tweets = await this.client.v2.userTimeline(id, {
+            max_results: 5, // do i get 100 tweets to search and get missed tweets?
+            exclude: included,
+        })
+        return tweets.data;
     }
 }
 
 
+async function main() {
+    const lilyn = new TwitterUser(api.twitter_bearerToken, "bannedvtmemes", 5000);
+    const tweets = await lilyn.getUserTweets()
+}
+main()

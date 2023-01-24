@@ -1,8 +1,9 @@
+// this file is to store "Memory" to hard drive and get it from hard drive on start up
 import { JsonDB, Config } from "node-json-db"
 import tweets from "./mockTweets.json";
 // handles offline functionality
 // and missed tweets or posts
-export class Storage<T> {
+export class ExternalStorage<T> {
     private buffer: T[] = []
     constructor() {}
     get(): T[]  {
@@ -16,8 +17,7 @@ export class Storage<T> {
     }
 }
 // testing
-
-
+/* emulating how i'll get the tweets with the massive data
 async function main() {
     const twit = new Storage<{ id: number, val: number }>()
     const max_tweets = 5;
@@ -35,7 +35,7 @@ async function main() {
     console.log(twit)
 }
 main()
-
+*/
 // Mocking how Twitter gets tweets
 // time - it maps to the id basically
 // max_tweets - how much you wanna get (sorted by newest (higher id))
