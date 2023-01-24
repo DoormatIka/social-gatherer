@@ -74,35 +74,42 @@ export class TwitterUser {
     }
 
     async getDelayedTweetListener() {
-
+        // where you'll get the eventListener to get tweets after it turns on
     }
 
+    // helper functions
     public async getUserTweets(
         options?: {
             includeReplies: boolean, 
             includeRetweets: boolean 
         }) {
-
-        const included: ("replies"|"retweets")[] = ["replies", "retweets"];
-        if (options) {
-            const { includeReplies, includeRetweets } = options;
-            if (includeReplies ) included.splice(0, 1);
-            if (includeRetweets) included.splice(1, 1);
-        }
+        
+        const excluded = this.convertIncludeToExclude(options);
         const user = await this.client.v2.userByUsername(this.userId)
         const id = user.data.id;
 
         // this function returns the user's post history
         const tweets = await this.client.v2.userTimeline(id, {
             max_results: 5, // do i get 100 tweets to search and get missed tweets?
-            exclude: included,
+            exclude: excluded,
         })
         return tweets.data;
+    }
+
+    private convertIncludeToExclude(option?: { includeReplies: boolean, includeRetweets: boolean }) {
+        const included: ("replies"|"retweets")[] = ["replies", "retweets"];
+
+        if (option) {
+            const { includeReplies, includeRetweets } = option;
+            if (includeReplies ) included.splice(0, 1);
+            if (includeRetweets) included.splice(1, 1);
+        }
+        return included;
     }
 }
 
 
-async function main() {
+async function main() { // testing
     const lilyn = new TwitterUser(api.twitter_bearerToken, "bannedvtmemes", 5000);
     const tweets = await lilyn.getUserTweets()
 }
