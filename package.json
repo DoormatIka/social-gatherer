@@ -4,7 +4,7 @@
   "description": "A library that takes data from YouTube, Twitter and etc. We also have persistent events which are indexed on time, so if you closed the program and reopened it: it will read everything from the time you closed the program.",
   "main": "index.js",
   "scripts": {
-    "ts-start": "ts-node --esm ./src/ts/utils/db.ts",
+    "ts-start": "tsc && node ./src/js/index.js",
     "js-start": "node ./src/js/index.js",
     "build": "rm -rf ./src/js/* && tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
