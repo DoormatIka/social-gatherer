@@ -1,12 +1,14 @@
-import { TwitterApi, TwitterApiReadOnly } from "twitter-api-v2";
+import { TwitterApi, TwitterApiReadOnly, TweetV2PaginableTimelineResult } from "twitter-api-v2";
 import EventEmitter from "events"
 import TypedEmitter from "typed-emitter"
+import { Storage } from "./buffer"
 
 type TwitEvents = {
     tweeted: (text: string, sensitive?: boolean) => void
 }
 
 type TwitterMemory = {
+    // to be stored in database
     tweet_id: string,
 }
 
@@ -28,10 +30,11 @@ export class TwitterUser {
     private event: TypedEmitter<TwitEvents>
     private client: TwitterApiReadOnly
     private innateMemory: TwitterMemory
+    private innateStorage: Array<TweetV2PaginableTimelineResult> = []
     constructor(
         bearerToken: string,
         public userId: string,
-        public msRefresh: number
+        public msRefresh: number,
     ) {
         const t = new TwitterApi(bearerToken);
         this.client = t.readOnly;
@@ -67,7 +70,15 @@ export class TwitterUser {
         return this.event;
     }
 
-    private async getUserTweets(options?: { includeReplies: boolean, includeRetweets: boolean }) {
+    async getDelayedTweetListener() {
+
+    }
+
+    public async getUserTweets(
+        options?: { 
+            includeReplies: boolean, 
+            includeRetweets: boolean 
+        }, sinceID?: string) {
         const excluded: ("replies"|"retweets")[] = [];
         if (options) {
             const { includeReplies, includeRetweets } = options;
@@ -76,10 +87,31 @@ export class TwitterUser {
         }
 
         const id = (await this.client.v2.userByUsername(this.userId)).data.id;
-        const tweets = await this.client.v2.userTimeline(id, {
+        const tweets = await this.client.v2.userTimeline( id, {
             max_results: 5,
             exclude: excluded || ["replies", "retweets"],
+            since_id: sinceID
         })
         return tweets.data;
     }
+
+    private async getDelayedTweets(
+        options?: {
+            includeReplies: boolean, 
+            includeRetweets: boolean 
+        }) {
+        while (true) {
+            const tweets = await this.getUserTweets(options, this.innateMemory.tweet_id); 
+            if (tweets.data.length === 0) {
+                break;
+            }
+            // what's the stopping condition for tweets, tests needed
+            this.innateStorage.push(tweets)
+            // this.buffer.add()
+            // the storage is supposed to store the last tweet_id to database
+            // the "memory" of the object should be the storage for bufferedTweets
+        }
+    }
 }
+
+
