@@ -8,13 +8,11 @@ type TwitEvents = {
 type TwitterMemory = {
     // to be stored in database
     tweet_id: string,
-    time: string
 }
 type Options = {
     includeReplies: boolean, 
     includeRetweets: boolean 
 }
-
 export type TwitterJSON = {
     userId: string,
     msRefresh: number,
@@ -40,9 +38,8 @@ export class TwitterUser {
     ) {
         const t = new TwitterApi(this.bearerToken);
         this.client = t.readOnly;
-        this.innateMemory = { tweet_id: "", time: "" };
+        this.innateMemory = { tweet_id: "" };
         this.event = new EventEmitter() as TypedEmitter<TwitEvents>
-        console.log()
     }
     setInnateMemory(memory: TwitterMemory) {
         this.innateMemory = memory
@@ -61,17 +58,18 @@ export class TwitterUser {
     async enableTweetEvent(options?: Options) {
         setInterval(async () => {
             const currentTweet = await this.getCurrentTweet(options);
-            if (!currentTweet) return;
-            // if there's no tweetId's saved in memory
-            if (this.innateMemory.tweet_id.length === 0) {
-                this.innateMemory.tweet_id = currentTweet.id;
-                return;
-            }
-            // if memory tweetId is not equal to current tweetId
-            // aka. you tweeted something!
-            if (this.innateMemory.tweet_id !== currentTweet.id) {
-                this.event.emit("tweeted", currentTweet.text, currentTweet.possibly_sensitive); 
-                this.innateMemory.tweet_id = currentTweet.id;
+            if (currentTweet) {
+                // if there's no tweetId's saved in memory
+                if (this.innateMemory.tweet_id.length === 0) {
+                    this.innateMemory.tweet_id = currentTweet.id;
+                    return;
+                }
+                // if memory tweetId is not equal to current tweetId
+                // aka. you tweeted something!
+                if (this.innateMemory.tweet_id !== currentTweet.id) {
+                    this.event.emit("tweeted", currentTweet.text, currentTweet.possibly_sensitive); 
+                    this.innateMemory.tweet_id = currentTweet.id;
+                }
             }
         }, this.msRefresh)
     }

@@ -4,24 +4,10 @@ import TypedEmitter from "typed-emitter";
 
 type YouTubeEvents = {
     newUpload: (info: string) => void,
-    subscribeMilestone: (milestone: number, subscriberCount: number) => void
 }
 type YoutubeMemory = {
-    channelID: string,
     previousVideoID: string,
-    milestones: {
-        prev: number | null,
-        next: number | null
-    }
 }
-
-
-const subscriberMilestones: number[] = []
-let subBase = 1000;
-for (let i = 1; i < 13; i++) {
-    subscriberMilestones.push(subBase);
-    if (i % 2) subBase *= 5; else subBase *= 2;
-} // up to 500,000,000
 
 /**
  * makes a YouTube class to use for events
@@ -34,21 +20,22 @@ for (let i = 1; i < 13; i++) {
  */
 export class YouTubeChannel {
     private innateMemory: YoutubeMemory
+    private event: TypedEmitter<YouTubeEvents>
     constructor(
         public channelID: string,
         public msRefresh: number,
     ) {
-        this.innateMemory = { 
-            channelID: this.channelID, 
-            previousVideoID: "",
-            milestones: {
-                prev: null,
-                next: null
-            }
-        };
+        this.innateMemory = { previousVideoID: "", };
+        this.event = new EventEmitter() as TypedEmitter<YouTubeEvents>
         if (msRefresh < 10000) {
             console.log(`[WARN] {YouTubeChannel}: msRefresh (${msRefresh}ms) is under 10000ms / 10s.`)
         }
+    }
+    setInnateMemory(memory: YoutubeMemory) {
+        this.innateMemory = memory
+    }
+    getEventEmitter() {
+        return this.event;
     }
     /**
      * validates the channelID
@@ -79,60 +66,33 @@ export class YouTubeChannel {
     * listener.on("newUpload", payload => console.log(payload));
     * ```
     */
-    async getVideoListener() {
-        const e = makeEvent()
+    public async enableVideoEvent() {
         setInterval(async () => {
-            // mocked for testing
-            const data = await this.getVideos();
-            const items = data.items.length;
-            if (items > 0) {
-                const recentVideo = data.items[0];
+            const currentVideo = await this.getCurrentVideo();
+            if (currentVideo) {
                 if (this.innateMemory.previousVideoID.length == 0) {
-                    this.innateMemory.previousVideoID = recentVideo.videoId;
+                    this.innateMemory.previousVideoID = currentVideo.videoId;
+                    return;
                 }
 
-                if (this.innateMemory.previousVideoID !== recentVideo.videoId) {
-                    this.innateMemory.previousVideoID = recentVideo.videoId;
-                    e.emit("newUpload", recentVideo.videoId);
+                if (this.innateMemory.previousVideoID !== currentVideo.videoId) {
+                    this.event.emit("newUpload", currentVideo.videoId);
+                    this.innateMemory.previousVideoID = currentVideo.videoId;
                 }
             }
         }, this.msRefresh);
-        return e;
     }
-    /**
-     * repeatedly checks if you hit a subscriber milestone 
-     * SHOULD ONLY BE CALLED ONCE
-     * @returns - an EventEmitter. Use it to run `event.on()`
-     * @example
-     * ```js
-     * // .. created YoutubeChannel object ..
-     * const subscribe = await channel.recordSubscriberMilestones();
-     * subscribe.on("subscribeMilestone", (milestone, subscribeCount) => {
-     *     // do things with the variables here
-     * }
-     * ```
-     */
-    async recordSubscriberMilestones() {
-        const e = makeEvent();
-        setInterval(async () => {
-            const subscriberCount = await this.getSubscriberCount();
-            const { prev, next } = getMilestoneFromSubscriberCount(subscriberMilestones, subscriberCount);
+    public async getDelayedVideos() {
+        const currentVideo = await this.getCurrentVideo();
+        const data = await this.getVideos();
+        return data.items.map(c => {
+            return { title: c.title, videoId: c.videoId }
+        })
+    }
 
-            // if milestones is null
-            if (!this.innateMemory.milestones.prev || !this.innateMemory.milestones.next) {
-                this.innateMemory.milestones.prev = prev
-                this.innateMemory.milestones.next = next
-                return;
-            }
-
-            // the next milestone gets hit
-            if (this.innateMemory.milestones.next <= subscriberCount) {
-                e.emit("subscribeMilestone", this.innateMemory.milestones.next, subscriberCount);
-                this.innateMemory.milestones.prev = prev
-                this.innateMemory.milestones.next = next
-            }
-        }, this.msRefresh);
-        return e;
+    private async getCurrentVideo() {
+        const data = await this.getVideos();
+        return data.items.at(0)
     }
 
     private async getVideos() {
@@ -142,32 +102,4 @@ export class YouTubeChannel {
         })
         return vids; 
     }
-
-    private async getSubscriberCount() {
-        const stats = await YTCH.getChannelInfo({
-            channelId: this.channelID,
-        })
-        return stats.subscriberCount;
-    }
-}
-
-function getMilestoneFromSubscriberCount(subMilestones: number[], subCount: number) {
-    let milestones = {
-        prev: 0,
-        next: 0
-    }
-    for (const milestone of subMilestones) {
-        if (subCount > milestone) {
-            milestones.prev = milestone;
-        }
-        if (subCount < milestone) {
-            milestones.next = milestone;
-            break;
-        }
-    }
-    return milestones;
-}
-
-function makeEvent() {
-    return new EventEmitter() as TypedEmitter<YouTubeEvents>
 }
