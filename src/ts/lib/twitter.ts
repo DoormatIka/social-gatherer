@@ -5,13 +5,16 @@ import TypedEmitter from "typed-emitter";
 
 type TwitEvents = {
     tweeted: (text: string, sensitive?: boolean) => void,
-
+    delayedTweeted: (data: { text: string, sensitive?: boolean }[]) => void    
 }
-
 type TwitterMemory = {
     // to be stored in database
     tweet_id: string,
     time: string
+}
+type Options = {
+    includeReplies: boolean, 
+    includeRetweets: boolean 
 }
 
 export type TwitterJSON = {
@@ -32,7 +35,6 @@ export class TwitterUser {
     private event: TypedEmitter<TwitEvents>
     private client: TwitterApiReadOnly
     private innateMemory: TwitterMemory
-    public innateStorage: Array<TweetV2> = []
     constructor(
         bearerToken: string,
         public userId: string,
@@ -43,6 +45,10 @@ export class TwitterUser {
         this.innateMemory = { tweet_id: "", time: "" };
         this.event = new EventEmitter() as TypedEmitter<TwitEvents>
     }
+    
+    getEventEmitter() {
+        return this.event;
+    }
     /**
      * listens to events that happens in Twitter accounts every msRefresh
      * 
@@ -50,12 +56,10 @@ export class TwitterUser {
      * @returns - An EventEmitter
      * 
      */
-    async getTweetListener(options?: { includeReplies: boolean, includeRetweets: boolean }) {
+    async enableTweetEvent(options?: Options) {
         setInterval(async () => {
-            const tweets = await this.getUserTweets(options);
-            const currentTweet = tweets.data.at(0);
+            const currentTweet = await this.getCurrentTweet(options);
             if (!currentTweet) return;
-
             // if there's no tweetId's saved in memory
             if (this.innateMemory.tweet_id.length === 0) {
                 this.innateMemory.tweet_id = currentTweet.id;
@@ -68,12 +72,28 @@ export class TwitterUser {
                 this.innateMemory.tweet_id = currentTweet.id;
             }
         }, this.msRefresh)
-
-        return this.event;
     }
 
-    async getDelayedTweetListener() {
-        // where you'll get the eventListener to get tweets after it turns on
+    async enableDelayedTweetsEvent(options?: { includeReplies: boolean, includeRetweets: boolean }) {
+        // the event will only be run once. (on turn on)
+        // if memory_id isn't equal to tweet_id (twitter)
+        //     run the event and get the array from getDelayedTweets
+        // 
+
+        const currentTweet = await this.getCurrentTweet(options)
+        if (!currentTweet) return; 
+        // checking if tweet_id is null
+        if (this.innateMemory.tweet_id.length === 0) {
+            this.innateMemory.tweet_id = currentTweet.id;
+            return;
+        }
+
+        const tweets = await this.getDelayedTweets(
+            this.innateMemory.tweet_id,
+            options
+        )
+        // check if you missed a tweet or not before emitting the event
+        console.log(tweets);
     }
 
     // helper functions (turn to private later)
@@ -99,6 +119,7 @@ export class TwitterUser {
         includeReplies: boolean, 
         includeRetweets: boolean
     }) {
+        const tweets: Array<TweetV2> = []
         let token: string | undefined;
         let tw: TweetV2PaginableTimelineResult;
         while (true) {
@@ -106,10 +127,20 @@ export class TwitterUser {
             if (!tw.meta.next_token) break;
 
             const found = tw.data.find(v => v.id === tweetID);
-            this.innateStorage.push(...tw.data)
+            tweets.push(...tw.data)
             if (found) break;
             token = tw.meta.next_token;
         }
+        return tweets;
+    }
+
+    private async getCurrentTweet(options?: Options) {
+        const tweets = await this.getUserTweets(options);
+        return tweets.data.at(0); 
+    }
+
+    private async checkMemoryTweetID() {
+
     }
 
     private convertIncludeToExclude(option?: { includeReplies: boolean, includeRetweets: boolean }) {
@@ -126,9 +157,9 @@ export class TwitterUser {
 
 
 async function main() { // testing
-    const lilyn = new TwitterUser(api.twitter_bearerToken, "danimato_", 5000);
+    const lilyn = new TwitterUser(api.bearer_token, "danimato_", 5000);
     // getting all tweets after tweet ID: 1608485058733826050
     await lilyn.getDelayedTweets("1608485058733826050");
-    console.log( lilyn.innateStorage )
+    console.log(  )
 }
 main()
