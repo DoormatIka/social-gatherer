@@ -45,7 +45,9 @@ export class TwitterUser {
         this.innateMemory = { tweet_id: "", time: "" };
         this.event = new EventEmitter() as TypedEmitter<TwitEvents>
     }
-    
+    setInnateMemory(memory: TwitterMemory) {
+        this.innateMemory = memory
+    } 
     getEventEmitter() {
         return this.event;
     }
@@ -74,26 +76,23 @@ export class TwitterUser {
         }, this.msRefresh)
     }
 
-    async enableDelayedTweetsEvent(options?: { includeReplies: boolean, includeRetweets: boolean }) {
-        // the event will only be run once. (on turn on)
-        // if memory_id isn't equal to tweet_id (twitter)
-        //     run the event and get the array from getDelayedTweets
-        // 
+    public async getDelayedTweets(options?: {
+        includeReplies: boolean, 
+        includeRetweets: boolean
+    }) {
+        const tweets: Array<TweetV2> = []
+        let token: string | undefined;
+        let tw: TweetV2PaginableTimelineResult;
+        while (true) {
+            tw = await this.getUserTweets(options, token);
+            if (!tw.meta.next_token) break;
 
-        const currentTweet = await this.getCurrentTweet(options)
-        if (!currentTweet) return; 
-        // checking if tweet_id is null
-        if (this.innateMemory.tweet_id.length === 0) {
-            this.innateMemory.tweet_id = currentTweet.id;
-            return;
+            const found = tw.data.find(v => v.id === this.innateMemory.tweet_id);
+            tweets.push(...tw.data)
+            if (found) break;
+            token = tw.meta.next_token;
         }
-
-        const tweets = await this.getDelayedTweets(
-            this.innateMemory.tweet_id,
-            options
-        )
-        // check if you missed a tweet or not before emitting the event
-        console.log(tweets);
+        return tweets;
     }
 
     // helper functions (turn to private later)
@@ -113,34 +112,11 @@ export class TwitterUser {
             pagination_token: nextToken
         })
         return tweets.data;
-    }
-
-    public async getDelayedTweets(tweetID: string, options?: {
-        includeReplies: boolean, 
-        includeRetweets: boolean
-    }) {
-        const tweets: Array<TweetV2> = []
-        let token: string | undefined;
-        let tw: TweetV2PaginableTimelineResult;
-        while (true) {
-            tw = await this.getUserTweets(options, token);
-            if (!tw.meta.next_token) break;
-
-            const found = tw.data.find(v => v.id === tweetID);
-            tweets.push(...tw.data)
-            if (found) break;
-            token = tw.meta.next_token;
-        }
-        return tweets;
-    }
+    } 
 
     private async getCurrentTweet(options?: Options) {
         const tweets = await this.getUserTweets(options);
         return tweets.data.at(0); 
-    }
-
-    private async checkMemoryTweetID() {
-
     }
 
     private convertIncludeToExclude(option?: { includeReplies: boolean, includeRetweets: boolean }) {
@@ -154,12 +130,3 @@ export class TwitterUser {
         return included;
     }
 }
-
-
-async function main() { // testing
-    const lilyn = new TwitterUser(api.bearer_token, "danimato_", 5000);
-    // getting all tweets after tweet ID: 1608485058733826050
-    await lilyn.getDelayedTweets("1608485058733826050");
-    console.log(  )
-}
-main()
