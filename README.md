@@ -26,10 +26,10 @@ Go to the Wiki Page.
 [Twitch API](https://dev.twitch.tv/docs/authentication/register-app/) (Follow steps 1-10)
 
 #### Supported Websites
-Incomplete Functionality:
-Everything.
+Twitch - Live Events
 
-Complete Functionality:
-None, yet.
+Youtube - Live Events
+
+Twitter - Live Events (Building Delayed Events)
 
 #### Made for Kurix (SleepyBubbles' Discord Bot)
