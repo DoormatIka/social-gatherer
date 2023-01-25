@@ -108,7 +108,7 @@ export class TwitterUser {
     }
 
     // helper functions (turn to private later)
-    public async getUserTweets(options?: {
+    private async getUserTweets(options?: {
             includeReplies: boolean, 
             includeRetweets: boolean 
         }, nextToken?: string) {

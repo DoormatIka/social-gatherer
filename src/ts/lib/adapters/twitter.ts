@@ -13,20 +13,7 @@ type Data = {
     twitter: TwitterJSON[],
     youtube: []
 }
-async function twitterAdapter(db: JsonDB) {
-    /* Make the Mock data
-    await db.delete("/")
-    await db.push("/twitter", [] as TwitterJSON[], true);
-    for (let i = 0; i <= 15; i++) {
-        const t = new TwitterUser(
-            `${i}`, `${Math.random() * 4000}`, Math.random() * 10000
-        );
-        t.setInnateMemory({ tweet_id: `${Math.random() * 10}`, time: "" });
-        await db.push(`/twitter[${i}]`, t, true)
-    }
-    await db.save() 
-    */
-    
+async function twitterAdapter(db: JsonDB) { 
     // convert the mock Data to Objects
     const adapted: TwitterUser[] = []
     const data = await db.getObject<TwitterJSON[]>("/twitter");
@@ -40,7 +27,10 @@ async function twitterAdapter(db: JsonDB) {
 
 async function main() {
     const db = new JsonDB(new Config("test", false, true, "/"));
+    await db.delete("/")
     const data = await twitterAdapter(db);
-    console.log(data)
+    for (const d of data) {
+        d.getDelayedTweets();
+    }
 }
 main()
