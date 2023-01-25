@@ -1,11 +1,9 @@
 import { TwitterApi, TwitterApiReadOnly, TweetV2, TweetV2PaginableTimelineResult } from "twitter-api-v2";
-import api from "../../../secrets/api.json"
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
 
 type TwitEvents = {
     tweeted: (text: string, sensitive?: boolean) => void,
-    delayedTweeted: (data: { text: string, sensitive?: boolean }[]) => void    
 }
 type TwitterMemory = {
     // to be stored in database
@@ -29,25 +27,26 @@ export type TwitterJSON = {
  * @param userId - the username found here: https://twitter.com/[userId]
  * @param msRefresh - how many times it will update the API (with getTweetListener)
  * 
- * Recommended msRefresh: 30000ms / 30s
+ * Recommended msRefresh: 30000ms / 30s (to avoid hitting rate-limits)
  */
 export class TwitterUser {
     private event: TypedEmitter<TwitEvents>
     private client: TwitterApiReadOnly
     private innateMemory: TwitterMemory
     constructor(
-        bearerToken: string,
+        private bearerToken: string,
         public userId: string,
         public msRefresh: number,
     ) {
-        const t = new TwitterApi(bearerToken);
+        const t = new TwitterApi(this.bearerToken);
         this.client = t.readOnly;
         this.innateMemory = { tweet_id: "", time: "" };
         this.event = new EventEmitter() as TypedEmitter<TwitEvents>
+        console.log()
     }
     setInnateMemory(memory: TwitterMemory) {
         this.innateMemory = memory
-    } 
+    }
     getEventEmitter() {
         return this.event;
     }
@@ -55,6 +54,7 @@ export class TwitterUser {
      * listens to events that happens in Twitter accounts every msRefresh
      * 
      * streams weren't used since they had rate limits
+     * @param options - if you want to includeReplies and includeRetweets = boolean
      * @returns - An EventEmitter
      * 
      */
@@ -75,11 +75,14 @@ export class TwitterUser {
             }
         }, this.msRefresh)
     }
-
-    public async getDelayedTweets(options?: {
-        includeReplies: boolean, 
-        includeRetweets: boolean
-    }) {
+    /**
+     * Gets the tweets you missed while the program was offline.
+     * 
+     * For an example: head to ./src/examples/offline.ts
+     * @param options - if you want to includeReplies and includeRetweets = boolean
+     * @returns Tweets
+     */
+    public async getDelayedTweets(options?: Options) {
         const currentTweet = await this.getCurrentTweet(options);
         if (!currentTweet) return;
         // if there's no tweetID's saved
@@ -97,21 +100,18 @@ export class TwitterUser {
 
             const found = tw.data.find(v => v.id === this.innateMemory.tweet_id);
             tweets.push(...tw.data)
-            if (found) break;
+            if (found) break; // if 
             token = tw.meta.next_token;
         }
-        const latestTweets = tweets.at(-1);
-        if (latestTweets) {
-            this.innateMemory.tweet_id = latestTweets.id
+        const latestTweet = tweets.at(0);
+        if (latestTweet) {
+            this.innateMemory.tweet_id = latestTweet.id
         }
         return tweets;
     }
 
-    // helper functions (turn to private later)
-    private async getUserTweets(options?: {
-            includeReplies: boolean, 
-            includeRetweets: boolean 
-        }, nextToken?: string) {
+    // helper functions
+    private async getUserTweets(options?: Options, nextToken?: string) {
         
         const excluded = this.convertIncludeToExclude(options);
         const user = await this.client.v2.userByUsername(this.userId)

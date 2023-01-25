@@ -3,3 +3,4 @@ secrets/*
 src/js/*
 package-lock.json
 init.json
+test.json
