@@ -80,6 +80,14 @@ export class TwitterUser {
         includeReplies: boolean, 
         includeRetweets: boolean
     }) {
+        const currentTweet = await this.getCurrentTweet(options);
+        if (!currentTweet) return;
+        // if there's no tweetID's saved
+        if (this.innateMemory.tweet_id.length == 0) {
+            this.innateMemory.tweet_id = currentTweet.id;
+            return;
+        }
+
         const tweets: Array<TweetV2> = []
         let token: string | undefined;
         let tw: TweetV2PaginableTimelineResult;
@@ -91,6 +99,10 @@ export class TwitterUser {
             tweets.push(...tw.data)
             if (found) break;
             token = tw.meta.next_token;
+        }
+        const latestTweets = tweets.at(-1);
+        if (latestTweets) {
+            this.innateMemory.tweet_id = latestTweets.id
         }
         return tweets;
     }
