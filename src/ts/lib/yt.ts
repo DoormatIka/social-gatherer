@@ -8,6 +8,11 @@ type YouTubeEvents = {
 type YoutubeMemory = {
     previousVideoID: string,
 }
+export type YoutubeJSON = {
+    channelID: string,
+    msRefresh: number,
+    innateMemory: { previousVideoID: string }
+}
 
 /**
  * makes a YouTube class to use for events
