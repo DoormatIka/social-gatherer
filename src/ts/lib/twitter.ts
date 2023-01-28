@@ -1,11 +1,13 @@
 import { TwitterApi, TwitterApiReadOnly, TweetV2, TweetV2PaginableTimelineResult } from "twitter-api-v2";
+import { Plug } from "./adapter";
+
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
 
 type TwitEvents = {
     tweeted: (text: string, sensitive?: boolean) => void,
 }
-type TwitterMemory = {
+interface TwitterMemory {
     // to be stored in database
     tweet_id: string,
 }
@@ -13,11 +15,10 @@ type Options = {
     includeReplies: boolean, 
     includeRetweets: boolean 
 }
-export type TwitterJSON = {
+export interface TwitterParameters {
+    bearerToken: string,
     userId: string,
     msRefresh: number,
-    innateMemory: TwitterMemory,
-    bearerToken: string,
 }
 /**
  * Twitter class to interact with the Twitter API
@@ -28,21 +29,18 @@ export type TwitterJSON = {
  * Recommended msRefresh: 30000ms / 30s (to avoid hitting rate-limits)
  */
 export class TwitterUser {
+    private plug: Plug = new Plug()
     private event: TypedEmitter<TwitEvents>
     private client: TwitterApiReadOnly
-    private innateMemory: TwitterMemory
-    constructor(
-        private bearerToken: string,
-        public userId: string,
-        public msRefresh: number,
-    ) {
-        const t = new TwitterApi(this.bearerToken);
+    private innateMemory: TwitterMemory & TwitterParameters
+    constructor(parameters: TwitterParameters, memory?: TwitterMemory) {
+        this.innateMemory = { 
+            ...parameters, 
+            ...memory ?? { tweet_id: "" }
+        };
+        const t = new TwitterApi(this.innateMemory.bearerToken);
         this.client = t.readOnly;
-        this.innateMemory = { tweet_id: "" };
         this.event = new EventEmitter() as TypedEmitter<TwitEvents>
-    }
-    setInnateMemory(memory: TwitterMemory) {
-        this.innateMemory = memory
     }
     getEventEmitter() {
         return this.event;
@@ -71,7 +69,7 @@ export class TwitterUser {
                     this.innateMemory.tweet_id = currentTweet.id;
                 }
             }
-        }, this.msRefresh)
+        }, this.innateMemory.msRefresh)
     }
     /**
      * Gets the tweets you missed while the program was offline.
@@ -112,7 +110,7 @@ export class TwitterUser {
     private async getUserTweets(options?: Options, nextToken?: string) {
         
         const excluded = this.convertIncludeToExclude(options);
-        const user = await this.client.v2.userByUsername(this.userId)
+        const user = await this.client.v2.userByUsername(this.innateMemory.userId)
         const id = user.data.id;
 
         // this function returns the user's post history
