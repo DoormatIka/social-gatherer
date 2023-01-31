@@ -1,8 +1,6 @@
 import { YouTubeChannel } from "./lib/yt";
 import { TwitterUser } from "./lib/twitter";
 import { TwitchUser, TokenManager } from "./lib/twitch";
-import { twitterAdapter } from "./lib/adapters/twitter";
-import { DatabaseManager } from "./lib/db/db";
 // REMOVE THIS TO AVOID EXPOSING API.JSON
 // import api from "../../secrets/api.json"
 const social_gatherer = {
@@ -10,9 +8,6 @@ const social_gatherer = {
     TwitterUser,
     TwitchUser,
     TokenManager,
-
-    twitterAdapter,
-    DatabaseManager
 }
 
 export {
@@ -21,7 +16,4 @@ export {
     TwitterUser,
     TwitchUser,
     TokenManager,
-
-    twitterAdapter,
-    DatabaseManager
 }

@@ -1,25 +1,25 @@
 import { TwitterApi, TwitterApiReadOnly, TweetV2, TweetV2PaginableTimelineResult } from "twitter-api-v2";
-import { Plug } from "./adapter";
-
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
 
+
 type TwitEvents = {
     tweeted: (text: string, sensitive?: boolean) => void,
-}
-interface TwitterMemory {
-    // to be stored in database
-    tweet_id: string,
 }
 type Options = {
     includeReplies: boolean, 
     includeRetweets: boolean 
 }
-export interface TwitterParameters {
+export interface TwitterJSON {
     bearerToken: string,
     userId: string,
     msRefresh: number,
+    memory: TwitterMemory,
 }
+interface TwitterMemory {
+    tweetid: string
+}
+
 /**
  * Twitter class to interact with the Twitter API
  * @param bearerToken - the bearer token found in the developer website
@@ -29,18 +29,16 @@ export interface TwitterParameters {
  * Recommended msRefresh: 30000ms / 30s (to avoid hitting rate-limits)
  */
 export class TwitterUser {
-    private plug: Plug = new Plug()
-    private event: TypedEmitter<TwitEvents>
+    private event = new EventEmitter() as TypedEmitter<TwitEvents>
     private client: TwitterApiReadOnly
-    private innateMemory: TwitterMemory & TwitterParameters
-    constructor(parameters: TwitterParameters, memory?: TwitterMemory) {
-        this.innateMemory = { 
-            ...parameters, 
-            ...memory ?? { tweet_id: "" }
-        };
-        const t = new TwitterApi(this.innateMemory.bearerToken);
+    private tweetId: string = ""
+    constructor(
+        private userId: string, 
+        private bearerToken: string, 
+        private msRefresh: number
+    ) {
+        const t = new TwitterApi(this.bearerToken);
         this.client = t.readOnly;
-        this.event = new EventEmitter() as TypedEmitter<TwitEvents>
     }
     getEventEmitter() {
         return this.event;
@@ -58,18 +56,18 @@ export class TwitterUser {
             const currentTweet = await this.getCurrentTweet(options);
             if (currentTweet) {
                 // if there's no tweetId's saved in memory
-                if (this.innateMemory.tweet_id.length === 0) {
-                    this.innateMemory.tweet_id = currentTweet.id;
+                if (this.tweetId.length === 0) {
+                    this.tweetId = currentTweet.id;
                     return;
                 }
                 // if memory tweetId is not equal to current tweetId
                 // aka. you tweeted something!
-                if (this.innateMemory.tweet_id !== currentTweet.id) {
+                if (this.tweetId !== currentTweet.id) {
                     this.event.emit("tweeted", currentTweet.text, currentTweet.possibly_sensitive); 
-                    this.innateMemory.tweet_id = currentTweet.id;
+                    this.tweetId = currentTweet.id;
                 }
             }
-        }, this.innateMemory.msRefresh)
+        }, this.msRefresh)
     }
     /**
      * Gets the tweets you missed while the program was offline.
@@ -82,8 +80,8 @@ export class TwitterUser {
         const currentTweet = await this.getCurrentTweet(options);
         if (!currentTweet) return;
         // if there's no tweetID's saved
-        if (this.innateMemory.tweet_id.length == 0) {
-            this.innateMemory.tweet_id = currentTweet.id;
+        if (this.tweetId.length == 0) {
+            this.tweetId = currentTweet.id;
             return;
         }
 
@@ -94,14 +92,14 @@ export class TwitterUser {
             tw = await this.getUserTweets(options, token);
             if (!tw.meta.next_token) break;
 
-            const found = tw.data.find(v => v.id === this.innateMemory.tweet_id);
+            const found = tw.data.find(v => v.id === this.tweetId);
             tweets.push(...tw.data)
             if (found) break; // if 
             token = tw.meta.next_token;
         }
         const latestTweet = tweets.at(0);
         if (latestTweet) {
-            this.innateMemory.tweet_id = latestTweet.id
+            this.tweetId = latestTweet.id
         }
         return tweets;
     }
@@ -110,7 +108,7 @@ export class TwitterUser {
     private async getUserTweets(options?: Options, nextToken?: string) {
         
         const excluded = this.convertIncludeToExclude(options);
-        const user = await this.client.v2.userByUsername(this.innateMemory.userId)
+        const user = await this.client.v2.userByUsername(this.userId)
         const id = user.data.id;
 
         // this function returns the user's post history
@@ -120,13 +118,11 @@ export class TwitterUser {
             pagination_token: nextToken
         })
         return tweets.data;
-    } 
-
+    }
     private async getCurrentTweet(options?: Options) {
         const tweets = await this.getUserTweets(options);
         return tweets.data.at(0); 
     }
-
     private convertIncludeToExclude(option?: { includeReplies: boolean, includeRetweets: boolean }) {
         const included: ("replies"|"retweets")[] = ["replies", "retweets"];
 
@@ -136,5 +132,40 @@ export class TwitterUser {
             if (includeRetweets) included.splice(1, 1);
         }
         return included;
+    }
+
+    ///////// needed methods //////////
+    getJSON(): TwitterJSON {
+        return { 
+            bearerToken: this.bearerToken, 
+            userId: this.userId,
+            msRefresh: this.msRefresh,
+            memory: { tweetid: this.tweetId }
+        };
+    }
+    setJSON(memory: TwitterMemory) {
+        this.tweetId = memory.tweetid
+    }
+}
+
+export class TwitterFactory {
+    convertJSON(json: TwitterJSON[]) {
+        const tw: TwitterUser[] = [];
+        for (const j of json) {
+            const init = new TwitterUser(j.userId, j.bearerToken, j.msRefresh);
+            init.setJSON(j.memory)
+            tw.push(init);
+        }
+        return tw;
+    }
+}
+
+export class TwitterSerializer {
+    convertObject(yt: TwitterUser[]) {
+        const json: TwitterJSON[] = [];
+        for (const y of yt) {
+            json.push(y.getJSON())
+        }
+        return json;
     }
 }
