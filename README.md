@@ -9,11 +9,14 @@ I should add a no-API option..
 
 ## Installation
 Requirements: `node, git` and some amount of patience. (my dumbass doesnt know how to publish an npm module)
+
+Assuming you already set up a separate project.
 ```sh
 git clone https://github.com/DoormatIka/social-gatherer
 cd social-gatherer
 npm install
 npm run build
+npm i axios node-json-db twitter-api-v2 typed-emitter yt-channel-info
 ```
 
 ## Usage
