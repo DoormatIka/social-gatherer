@@ -61,7 +61,7 @@ if (isYoutube(youtube)) { // type checking, remove this for vanilla node.js
 ## FAQ
 How do you get the userID's of the Youtube channels with an `@` on them?
 
-Get to the page source of the youtube channel and Ctrl+F "channelid" on the newly opened page source. It's formatted on JSON so you'll find it.
+Get to the page source of the youtube channel and Ctrl+F "channelid" on the newly opened page source. It's formatted on JSON so you'll find it. It's at the very first result.
 
 #### Supported Websites
 Twitch - Live Events
