@@ -43,14 +43,6 @@ export class TwitterUser {
     getEventEmitter() {
         return this.event;
     }
-    /**
-     * listens to events that happens in Twitter accounts every msRefresh
-     * 
-     * streams weren't used since they had rate limits
-     * @param options - if you want to includeReplies and includeRetweets = boolean
-     * @returns - An EventEmitter
-     * 
-     */
     async enableTweetEvent(options?: Options) {
         setInterval(async () => {
             const currentTweet = await this.getCurrentTweet(options);
@@ -69,14 +61,7 @@ export class TwitterUser {
             }
         }, this.msRefresh)
     }
-    /**
-     * Gets the tweets you missed while the program was offline.
-     * 
-     * For an example: head to ./src/examples/offline.ts
-     * @param options - if you want to includeReplies and includeRetweets = boolean
-     * @returns Tweets
-     */
-    public async getDelayedTweets(options?: Options) {
+    async getDelayedTweets(options?: Options) {
         const currentTweet = await this.getCurrentTweet(options);
         if (!currentTweet) return;
         // if there's no tweetID's saved
@@ -104,6 +89,7 @@ export class TwitterUser {
         return tweets;
     }
 
+    
     // helper functions
     private async getUserTweets(options?: Options, nextToken?: string) {
         

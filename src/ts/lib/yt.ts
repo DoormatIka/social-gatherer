@@ -4,7 +4,7 @@ import TypedEmitter from "typed-emitter";
 
 
 type YouTubeEvents = {
-    newUpload: (info: string) => void,
+    newUpload: (id: string, author: string, title: string, duration: string) => void,
 }
 type YoutubeMemory = {
     previousVideoID: string,
@@ -28,8 +28,8 @@ export class YouTubeChannel {
     private event: TypedEmitter<YouTubeEvents>
     private previousVideoID: string = ""
     constructor(
-        public channelID: string,
-        public msRefresh: number,
+        private channelID: string,
+        private msRefresh: number,
     ) {
         this.event = new EventEmitter() as TypedEmitter<YouTubeEvents>
         if (msRefresh < 10000) {
@@ -39,11 +39,7 @@ export class YouTubeChannel {
     getEventEmitter() {
         return this.event;
     }
-    /**
-     * validates the channelID
-     * @returns true/false value to indicate if it's valid or not
-     * @beta
-     */
+    
     async validate(): Promise<boolean> { 
         try {
             await YTCH.getChannelInfo({
@@ -55,19 +51,6 @@ export class YouTubeChannel {
         }
     }
     
-   /**
-    * repeatedly checks if you uploaded
-    * SHOULD ONLY BE CALLED ONCE
-    * @returns - an EventEmitter. Use it to run `event.on()`
-    * @example
-    * ```js
-    * // ... made the YouTubeChannel object ...
-    *
-    * const listener = await channel.getVideoListener();
-    * // listen to the newUpload event
-    * listener.on("newUpload", payload => console.log(payload));
-    * ```
-    */
     public async enableVideoEvent() {
         setInterval(async () => {
             const currentVideo = await this.getCurrentVideo();
@@ -78,7 +61,12 @@ export class YouTubeChannel {
                 }
 
                 if (this.previousVideoID !== currentVideo.videoId) {
-                    this.event.emit("newUpload", currentVideo.videoId);
+                    this.event.emit("newUpload", 
+                        currentVideo.videoId,
+                        currentVideo.author,
+                        currentVideo.title,
+                        currentVideo.durationText,
+                    );
                     this.previousVideoID = currentVideo.videoId;
                 }
             }
@@ -102,7 +90,7 @@ export class YouTubeChannel {
             sortBy: "newest",
             channelId: this.channelID,
         })
-        return vids; 
+        return vids;
     }
 
     ////////// needed methods ///////////

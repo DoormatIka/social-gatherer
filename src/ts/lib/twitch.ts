@@ -8,7 +8,6 @@ type Auth = {
     expires_in: string,
     token_type: string,
 }
-
 type TwitchStreamsResponse = {
     data: {
         id: string,
@@ -33,6 +32,13 @@ type TwitchStreamsResponse = {
 type TwitchEvents = {
     live: (user_login: string, title: string, viewer_count: number, thumbnail_url: string) => void
 }
+export type TwitchJSON = {
+    clientID: string,
+    username: string,
+    bearerToken: string,
+    msRefresh: number,
+}
+
 /**
  * Twitch class to interact with the Twitch API
  * @param clientID - can be found in Twitch API
@@ -47,13 +53,15 @@ export class TwitchUser {
     constructor(
         public clientID: string,
         public username: string,
-        public bearerToken: string | undefined,
+        public bearerToken: string,
         public msRefresh: number
     ) {
         this.event = new EventEmitter() as TypedEmitter<TwitchEvents>
     }
-
-    async getStreamListener() {
+    getStreamListener() {
+        return this.event;
+    }
+    async enableStreamListener() {
         setInterval(async () => {
             const channelInfo = await this.getStream();
             const streamInfo = channelInfo.at(0);
@@ -68,7 +76,6 @@ export class TwitchUser {
                 streamInfo.thumbnail_url
             )
         }, this.msRefresh)
-        return this.event;
     }
 
     private async getStream() {
@@ -84,6 +91,32 @@ export class TwitchUser {
         const res: TwitchStreamsResponse = response.data;
         return res.data;
     }
+    
+    ////////// needed methods ////////////
+    getJSON(): TwitchJSON {
+        return {
+            clientID: this.clientID,
+            username: this.username,
+            bearerToken: this.bearerToken,
+            msRefresh: this.msRefresh
+        }
+    }
+}
+
+export class TwitchFactory {
+    convertJSON(json: TwitchJSON[]) {
+        return json.map(c => new TwitchUser(c.clientID, c.username, c.bearerToken, c.msRefresh));
+    }
+}
+export class TwitchSerializer {
+    convertObject(tc: TwitchUser[]) {
+        return tc.map(c => c.getJSON());
+    }
+}
+
+type TokenManagerJSON = {
+    clientID: string,
+    clientSecret: string,
 }
 /**
  * Handles the refreshing of Twitch. Should be used with `TwitchUser`.
@@ -127,5 +160,24 @@ export class TokenManager {
                 "grant_type":    "client_credentials"
             }))
         return auth.data;
+    }
+
+    /////// needed methods ////////
+    getJSON() {
+        return {
+            clientID: this.clientID,
+            clientSecret: this.clientSecret,
+        }
+    }
+}
+
+export class ManagerFactory {
+    convertJSON(json: TokenManagerJSON) {
+        return new TokenManager(json.clientID, json.clientSecret);
+    }
+}
+export class ManagerSerializer {
+    convertObject(mgs: TokenManager): TokenManagerJSON {
+        return mgs.getJSON()
     }
 }
