@@ -2,8 +2,9 @@ import YTCH from "yt-channel-info";
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
 
+
 type YouTubeEvents = {
-    newUpload: (info: string) => void,
+    newUpload: (id: string, author: string, title: string, duration: string) => void,
 }
 type YoutubeMemory = {
     previousVideoID: string,
@@ -11,7 +12,7 @@ type YoutubeMemory = {
 export type YoutubeJSON = {
     channelID: string,
     msRefresh: number,
-    innateMemory: { previousVideoID: string }
+    memory: YoutubeMemory,
 }
 
 /**
@@ -24,29 +25,21 @@ export type YoutubeJSON = {
  *
  */
 export class YouTubeChannel {
-    private innateMemory: YoutubeMemory
     private event: TypedEmitter<YouTubeEvents>
+    private previousVideoID: string = ""
     constructor(
-        public channelID: string,
-        public msRefresh: number,
+        private channelID: string,
+        private msRefresh: number,
     ) {
-        this.innateMemory = { previousVideoID: "", };
         this.event = new EventEmitter() as TypedEmitter<YouTubeEvents>
         if (msRefresh < 10000) {
             console.log(`[WARN] {YouTubeChannel}: msRefresh (${msRefresh}ms) is under 10000ms / 10s.`)
         }
     }
-    setInnateMemory(memory: YoutubeMemory) {
-        this.innateMemory = memory
-    }
     getEventEmitter() {
         return this.event;
     }
-    /**
-     * validates the channelID
-     * @returns true/false value to indicate if it's valid or not
-     * @beta
-     */
+    
     async validate(): Promise<boolean> { 
         try {
             await YTCH.getChannelInfo({
@@ -58,31 +51,23 @@ export class YouTubeChannel {
         }
     }
     
-   /**
-    * repeatedly checks if you uploaded
-    * SHOULD ONLY BE CALLED ONCE
-    * @returns - an EventEmitter. Use it to run `event.on()`
-    * @example
-    * ```js
-    * // ... made the YouTubeChannel object ...
-    *
-    * const listener = await channel.getVideoListener();
-    * // listen to the newUpload event
-    * listener.on("newUpload", payload => console.log(payload));
-    * ```
-    */
     public async enableVideoEvent() {
         setInterval(async () => {
             const currentVideo = await this.getCurrentVideo();
             if (currentVideo) {
-                if (this.innateMemory.previousVideoID.length == 0) {
-                    this.innateMemory.previousVideoID = currentVideo.videoId;
+                if (this.previousVideoID.length == 0) {
+                    this.previousVideoID = currentVideo.videoId;
                     return;
                 }
 
-                if (this.innateMemory.previousVideoID !== currentVideo.videoId) {
-                    this.event.emit("newUpload", currentVideo.videoId);
-                    this.innateMemory.previousVideoID = currentVideo.videoId;
+                if (this.previousVideoID !== currentVideo.videoId) {
+                    this.event.emit("newUpload", 
+                        currentVideo.videoId,
+                        currentVideo.author,
+                        currentVideo.title,
+                        currentVideo.durationText,
+                    );
+                    this.previousVideoID = currentVideo.videoId;
                 }
             }
         }, this.msRefresh);
@@ -95,16 +80,50 @@ export class YouTubeChannel {
         })
     }
 
+    // helper methods
     private async getCurrentVideo() {
         const data = await this.getVideos();
         return data.items.at(0)
     }
-
     private async getVideos() {
         const vids = await YTCH.getChannelVideos({
             sortBy: "newest",
             channelId: this.channelID,
         })
-        return vids; 
+        return vids;
+    }
+
+    ////////// needed methods ///////////
+    getJSON(): YoutubeJSON {
+        return { 
+            channelID: this.channelID,
+            msRefresh: this.msRefresh,
+            memory: { previousVideoID: this.previousVideoID },
+        };
+    }
+    setJSON(memory: YoutubeMemory) {
+        this.previousVideoID = memory.previousVideoID
+    }
+}
+
+export class YoutubeFactory {
+    convertJSON(json: YoutubeJSON[]) {
+        const tw: YouTubeChannel[] = [];
+        for (const j of json) {
+            const init = new YouTubeChannel(j.channelID, j.msRefresh);
+            init.setJSON(j.memory)
+            tw.push(init);
+        }
+        return tw;
+    }
+}
+
+export class YoutubeSerializer {
+    convertObject(yt: YouTubeChannel[]) {
+        const json: YoutubeJSON[] = [];
+        for (const y of yt) {
+            json.push(y.getJSON())
+        }
+        return json;
     }
 }

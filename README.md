@@ -20,6 +20,36 @@ npm run build
 Get every file in `src/js` and copy-paste them to wherever in your project.
 Go to the Wiki Page.
 
+### Example
+No Cache
+```ts
+const lily = new YouTubeChannel("lilyn", 10000);
+await lily.validate() // returns true if it's valid
+await lily.enableVideoEvent(); // enables video tracking
+lily.getEventEmitter()
+    .on("newUpload", (id, author, title, duration) => {
+        console.log(`Video ID: ${id}, ${author}, ${title}`);
+    })
+```
+
+With Cache
+```ts
+const db = new Cache("cache");
+const youtube = await db.get("youtube");
+
+if (isYoutube(youtube)) { // type checking, remove this for vanilla node.js
+    youtube.forEach(async v => {
+        // enable everything in the cache
+        await v.enableVideoEvent();
+        v.getEventEmitter()
+            .on("newUpload", (id, author, title, duration) => {
+                    console.log(`Video ID: ${id}, ${author}, ${title}`);
+            })
+    })
+    db.pushYoutube(youtube) // update the cache to whatever changes you made
+}
+```
+
 ## Getting the APIs
 [Twitter API](https://developer.twitter.com/en/docs/twitter-api/getting-started/getting-access-to-the-twitter-api)
 
@@ -30,6 +60,6 @@ Twitch - Live Events
 
 Youtube - Live Events
 
-Twitter - Live Events (Building Delayed Events)
+Twitter - Live Events & Delayed Events
 
 #### Made for Kurix (SleepyBubbles' Discord Bot)
