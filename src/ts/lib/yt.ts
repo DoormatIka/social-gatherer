@@ -74,10 +74,51 @@ export class YouTubeChannel {
     }
     public async getDelayedVideos() {
         const currentVideo = await this.getCurrentVideo();
-        const data = await this.getVideos();
-        return data.items.map(c => {
-            return { title: c.title, videoId: c.videoId }
-        })
+        if (!currentVideo) return;
+        if (this.previousVideoID.length == 0) {
+            this.previousVideoID = currentVideo.videoId;
+            return;
+        }
+        const vids = await this.getVideos();
+        const videos = [...vids.items];
+        let continuation = vids.continuation;
+        let continuedVids;
+        if (!continuation) return;
+        while (true) {
+            if (!continuation) break;
+            continuedVids = await YTCH.getChannelVideosMore({ continuation }); 
+             
+            const found = continuedVids.items.find(v => v.videoId === this.previousVideoID);
+            videos.push(...continuedVids.items);
+            if (found) break;
+            continuation = continuedVids.continuation
+        }
+
+        const latestVid = videos.at(0);
+        if (latestVid) {
+            this.previousVideoID = latestVid.videoId;
+        }
+        // workaround for
+        // ytch's stupid policy 
+        // not exposing types :anger:
+        // return videos;
+
+        return videos.map(c => { 
+          c.author, 
+          c.authorId, 
+          c.durationText, 
+          c.lengthSeconds, 
+          c.liveNow, 
+          c.premiere, 
+          c.premium, 
+          c.publishedText, 
+          c.title, 
+          c.type, 
+          c.videoId, 
+          c.videoThumbnails, 
+          c.viewCount, 
+          c.viewCountText 
+        });
     }
 
     // helper methods
