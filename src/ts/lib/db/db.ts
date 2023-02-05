@@ -1,6 +1,6 @@
 import { JsonDB, Config } from "node-json-db";
 import { YouTubeChannel, YoutubeJSON } from "../yt";
-import { TwitterJSON, TwitterUser } from "../socials/twitter/twitter";
+import { TwitterJSON, TwitterUser } from "../twitter";
 import { Factory } from "./factory";
 import { Serialize } from "./serialize";
 import { ManagerFactory, TokenManager, TwitchJSON, TwitchUser } from "../twitch";
@@ -24,13 +24,16 @@ export class Cache {
     }
     
     async pushYoutube(...data: YouTubeChannel[]) {
-        await this.db.push("/youtube", await this.filterYoutube(this.serialize.youtube(data)));
+        const yt = this.serialize.youtube(data);
+        if (yt.length != 0) await this.db.push("/youtube", await this.filterYoutube(yt));
     }
     async pushTwitter(...data: TwitterUser[]) {
-        await this.db.push("/twitter", await this.filterTwitter(this.serialize.twitter(data)));
+        const tw = this.serialize.twitter(data);
+        if (tw.length != 0) await this.db.push("/twitter", await this.filterTwitter(tw));
     }
     async pushTwitch(...data: TwitchUser[]) {
-        await this.db.push("/twitch", await this.filterTwitch(this.serialize.twitch(data)));
+        const tw = this.serialize.twitch(data);
+        if (tw.length != 0) await this.db.push("/twitch", await this.filterTwitch(tw));
     }
     async pushManager(data: TokenManager) {
         await this.db.push("/manager", this.serialize.manager(data))

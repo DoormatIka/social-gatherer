@@ -1,5 +1,5 @@
 import { TwitterApi, TwitterApiReadOnly, TweetV2PaginableTimelineResult, TweetV2 } from "twitter-api-v2";
-import { twitter_bearerToken } from "../../../../../secrets/api.json";
+import { twitter_bearerToken } from "../../../secrets/api.json";
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
 

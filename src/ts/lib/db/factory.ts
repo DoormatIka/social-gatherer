@@ -1,5 +1,5 @@
 import { ManagerFactory, TwitchFactory } from "../twitch";
-import { TwitterFactory } from "../socials/twitter/twitter";
+import { TwitterFactory } from "../twitter";
 import { YoutubeFactory } from "../yt";
 
 
