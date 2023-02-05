@@ -1,5 +1,5 @@
 import { YouTubeChannel } from "./yt";
-import { TwitterUser } from "./twitter";
+import { TwitterUser } from "./socials/twitter/twitter";
 import { TokenManager, TwitchUser } from "./twitch";
 
 type AllUsers = TwitterUser[] | TwitchUser[] | YouTubeChannel[] | TokenManager | undefined

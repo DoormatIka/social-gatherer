@@ -50,7 +50,7 @@ export class YouTubeChannel {
             return false;
         }
     }
-    
+    // transfer to a class and do composition with it
     public async enableVideoEvent() {
         setInterval(async () => {
             const currentVideo = await this.getCurrentVideo();
@@ -80,8 +80,8 @@ export class YouTubeChannel {
             return;
         }
         
-        let vids;
-        let foundIndex: number;
+        let vids; 
+        let foundIndex: number
         let continuation: string | undefined | null;
         while (true) {
             vids = await this.getVideos(continuation);
@@ -103,7 +103,7 @@ export class YouTubeChannel {
         // ytch's stupid policy 
         // not exposing types :anger:
         return vids.items
-          .filter((_, i) => i <= foundIndex)
+          .filter((_, i) => i < foundIndex)
           .map(c => {
               return {
                   videoTitle: c.title,
@@ -155,7 +155,6 @@ export class YoutubeFactory {
         return tw;
     }
 }
-
 export class YoutubeSerializer {
     convertObject(yt: YouTubeChannel[]) {
         const json: YoutubeJSON[] = [];

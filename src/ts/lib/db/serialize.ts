@@ -1,5 +1,5 @@
 import { YouTubeChannel, YoutubeSerializer } from "../yt";
-import { TwitterSerializer, TwitterUser } from "../twitter";
+import { TwitterSerializer, TwitterUser } from "../socials/twitter/twitter";
 import { ManagerSerializer, TokenManager, TwitchSerializer, TwitchUser } from "../twitch";
 
 export class Serialize {

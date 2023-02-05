@@ -1,6 +1,6 @@
 import { JsonDB, Config } from "node-json-db";
 import { YouTubeChannel, YoutubeJSON } from "../yt";
-import { TwitterJSON, TwitterUser } from "../twitter";
+import { TwitterJSON, TwitterUser } from "../socials/twitter/twitter";
 import { Factory } from "./factory";
 import { Serialize } from "./serialize";
 import { ManagerFactory, TokenManager, TwitchJSON, TwitchUser } from "../twitch";

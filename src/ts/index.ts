@@ -1,5 +1,5 @@
 import { YouTubeChannel } from "./lib/yt";
-import { TwitterUser } from "./lib/twitter";
+import { TwitterUser } from "./lib/socials/twitter/twitter";
 import { TwitchUser, TokenManager } from "./lib/twitch";
 import { Cache } from "./lib/db/db";
 import { isYoutube, isTwitter, isTwitch, isManager } from "./lib/typecheckers";
