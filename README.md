@@ -9,11 +9,14 @@ I should add a no-API option..
 
 ## Installation
 Requirements: `node, git` and some amount of patience. (my dumbass doesnt know how to publish an npm module)
+
+Assuming you already set up a separate project.
 ```sh
 git clone https://github.com/DoormatIka/social-gatherer
 cd social-gatherer
 npm install
 npm run build
+npm i axios node-json-db twitter-api-v2 typed-emitter yt-channel-info
 ```
 
 ## Usage
@@ -54,6 +57,11 @@ if (isYoutube(youtube)) { // type checking, remove this for vanilla node.js
 [Twitter API](https://developer.twitter.com/en/docs/twitter-api/getting-started/getting-access-to-the-twitter-api)
 
 [Twitch API](https://dev.twitch.tv/docs/authentication/register-app/) (Follow steps 1-10)
+
+## FAQ
+How do you get the userID's of the Youtube channels with an `@` on them?
+
+Get to the page source of the youtube channel and Ctrl+F "channelid" on the newly opened page source. It's formatted on JSON so you'll find it. It's at the very first result.
 
 #### Supported Websites
 Twitch - Live Events
