@@ -79,46 +79,40 @@ export class YouTubeChannel {
             this.previousVideoID = currentVideo.videoId;
             return;
         }
-        const vids = await this.getVideos();
-        const videos = [...vids.items];
-        let continuation = vids.continuation;
-        let continuedVids;
-        if (!continuation) return;
+        
+        let vids;
+        let foundIndex: number;
+        let continuation: string | undefined | null;
         while (true) {
-            if (!continuation) break;
-            continuedVids = await YTCH.getChannelVideosMore({ continuation }); 
-             
-            const found = continuedVids.items.find(v => v.videoId === this.previousVideoID);
-            videos.push(...continuedVids.items);
-            if (found) break;
-            continuation = continuedVids.continuation
-        }
-
-        const latestVid = videos.at(0);
-        if (latestVid) {
-            this.previousVideoID = latestVid.videoId;
+            vids = await this.getVideos(continuation);
+            foundIndex = vids.items.findIndex(c => c.videoId === this.previousVideoID);
+            if (foundIndex != -1) {
+                const latestVid = vids.items.at(0);
+                if (latestVid) {
+                    this.previousVideoID = latestVid.videoId;
+                }
+                break;
+            }
+            if (vids.continuation) {
+                continuation = vids.continuation;
+            } else {
+                break;
+            }
         }
         // workaround for
         // ytch's stupid policy 
         // not exposing types :anger:
-        // return videos;
-
-        return videos.map(c => { 
-          c.author, 
-          c.authorId, 
-          c.durationText, 
-          c.lengthSeconds, 
-          c.liveNow, 
-          c.premiere, 
-          c.premium, 
-          c.publishedText, 
-          c.title, 
-          c.type, 
-          c.videoId, 
-          c.videoThumbnails, 
-          c.viewCount, 
-          c.viewCountText 
-        });
+        return vids.items
+          .filter((_, i) => i <= foundIndex)
+          .map(c => {
+              return {
+                  videoTitle: c.title,
+                  videoId: c.videoId,
+                  author: c.author,
+                  authorId: c.authorId,
+              }
+          })
+        
     }
 
     // helper methods
@@ -126,12 +120,15 @@ export class YouTubeChannel {
         const data = await this.getVideos();
         return data.items.at(0)
     }
-    private async getVideos() {
-        const vids = await YTCH.getChannelVideos({
+    private async getVideos(continuation?: string | null) {
+        if (continuation) {
+            return await YTCH.getChannelVideosMore({ continuation });
+        }
+
+        return await YTCH.getChannelVideos({
             sortBy: "newest",
             channelId: this.channelID,
         })
-        return vids;
     }
 
     ////////// needed methods ///////////
@@ -168,3 +165,4 @@ export class YoutubeSerializer {
         return json;
     }
 }
+

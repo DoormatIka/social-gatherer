@@ -1,7 +1,6 @@
-import { TwitterApi, TwitterApiReadOnly, TweetV2, TweetV2PaginableTimelineResult } from "twitter-api-v2";
+import { TwitterApi, TwitterApiReadOnly } from "twitter-api-v2";
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
-
 
 type TwitEvents = {
     tweeted: (text: string, sensitive?: boolean) => void,
@@ -21,6 +20,8 @@ interface TwitterMemory {
 }
 
 /**
+ * USES THE TWITTER API, WILL CONVERT TO SCRAPER SOON
+ *
  * Twitter class to interact with the Twitter API
  * @param bearerToken - the bearer token found in the developer website
  * @param userId - the username found here: https://twitter.com/[userId]
@@ -69,32 +70,35 @@ export class TwitterUser {
             this.tweetId = currentTweet.id;
             return;
         }
-
-        const tweets: Array<TweetV2> = []
+        
+        let tweets;
+        let foundIndex: number;
         let token: string | undefined;
-        let tw: TweetV2PaginableTimelineResult;
         while (true) {
-            tw = await this.getUserTweets(options, token);
-            if (!tw.meta.next_token) break;
-
-            const found = tw.data.find(v => v.id === this.tweetId);
-            tweets.push(...tw.data)
-            if (found) break; // if 
-            token = tw.meta.next_token;
+            tweets = await this.getUserTweets(options, token);
+            foundIndex = tweets.data.findIndex(c => c.id === this.tweetId);
+            if (foundIndex != -1) {
+                const latestTweet = tweets.data.at(0);
+                if (latestTweet) {
+                    this.tweetId = latestTweet.id;
+                }
+                break;
+            }
+            if (tweets.meta.next_token) {
+                token = tweets.meta.next_token;
+            } else {
+                break;
+            }
         }
-        const latestTweet = tweets.at(0);
-        if (latestTweet) {
-            this.tweetId = latestTweet.id
-        }
-        return tweets;
+        
+        return tweets.data.filter((_, i) => i <= foundIndex);
     }
 
     
     // helper functions
-    private async getUserTweets(options?: Options, nextToken?: string) {
-        
+    private async getUserTweets(options?: Options, nextToken?: string) { 
         const excluded = this.convertIncludeToExclude(options);
-        const user = await this.client.v2.userByUsername(this.userId)
+        const user = await this.client.v2.userByUsername(this.userId);
         const id = user.data.id;
 
         // this function returns the user's post history
@@ -102,12 +106,14 @@ export class TwitterUser {
             max_results: 5, // use pagination
             exclude: excluded,
             pagination_token: nextToken
-        })
+        });
         return tweets.data;
     }
     private async getCurrentTweet(options?: Options) {
         const tweets = await this.getUserTweets(options);
-        return tweets.data.at(0); 
+        if (tweets.meta.result_count < 1)
+            return undefined;
+        return tweets.data.at(0);
     }
     private convertIncludeToExclude(option?: { includeReplies: boolean, includeRetweets: boolean }) {
         const included: ("replies"|"retweets")[] = ["replies", "retweets"];
@@ -133,6 +139,16 @@ export class TwitterUser {
         this.tweetId = memory.tweetid
     }
 }
+
+/*
+async function main() {
+    const tw = new TwitterUser("LilynHana", bearer_token, 10000);
+    for (let i = 0; i < 2; i++) {
+        console.log( await tw.getDelayedTweets({ includeRetweets: true, includeReplies: false }) )
+    }
+}
+main()
+*/
 
 export class TwitterFactory {
     convertJSON(json: TwitterJSON[]) {
