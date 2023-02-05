@@ -74,10 +74,45 @@ export class YouTubeChannel {
     }
     public async getDelayedVideos() {
         const currentVideo = await this.getCurrentVideo();
-        const data = await this.getVideos();
-        return data.items.map(c => {
-            return { title: c.title, videoId: c.videoId }
-        })
+        if (!currentVideo) return;
+        if (this.previousVideoID.length == 0) {
+            this.previousVideoID = currentVideo.videoId;
+            return;
+        }
+        
+        let vids;
+        let foundIndex: number;
+        let continuation: string | undefined | null;
+        while (true) {
+            vids = await this.getVideos(continuation);
+            foundIndex = vids.items.findIndex(c => c.videoId === this.previousVideoID);
+            if (foundIndex != -1) {
+                const latestVid = vids.items.at(0);
+                if (latestVid) {
+                    this.previousVideoID = latestVid.videoId;
+                }
+                break;
+            }
+            if (vids.continuation) {
+                continuation = vids.continuation;
+            } else {
+                break;
+            }
+        }
+        // workaround for
+        // ytch's stupid policy 
+        // not exposing types :anger:
+        return vids.items
+          .filter((_, i) => i <= foundIndex)
+          .map(c => {
+              return {
+                  videoTitle: c.title,
+                  videoId: c.videoId,
+                  author: c.author,
+                  authorId: c.authorId,
+              }
+          })
+        
     }
 
     // helper methods
@@ -85,12 +120,15 @@ export class YouTubeChannel {
         const data = await this.getVideos();
         return data.items.at(0)
     }
-    private async getVideos() {
-        const vids = await YTCH.getChannelVideos({
+    private async getVideos(continuation?: string | null) {
+        if (continuation) {
+            return await YTCH.getChannelVideosMore({ continuation });
+        }
+
+        return await YTCH.getChannelVideos({
             sortBy: "newest",
             channelId: this.channelID,
         })
-        return vids;
     }
 
     ////////// needed methods ///////////
@@ -127,3 +165,4 @@ export class YoutubeSerializer {
         return json;
     }
 }
+
