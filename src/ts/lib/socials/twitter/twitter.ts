@@ -1,5 +1,6 @@
-import { TwitterApi, TwitterApiReadOnly, TweetV2PaginableTimelineResult, TweetV2 } from "twitter-api-v2";
-import { twitter_bearerToken } from "../../../../../secrets/api.json";
+import { TweetV2PaginableTimelineResult, TweetV2 } from "twitter-api-v2";
+import { TwitterApiWrapper } from "./api"
+import { bearer_token } from "../../../../../secrets/api.json";
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
 
@@ -30,17 +31,16 @@ interface TwitterMemory {
  * 
  * Recommended msRefresh: 30000ms / 30s (to avoid hitting rate-limits)
  */
-export class TwitterUser {
+export class TwitterUser { 
     private event = new EventEmitter() as TypedEmitter<TwitEvents>
-    private client: TwitterApiReadOnly
+    private api: TwitterApiWrapper
     private tweetId: string = ""
     constructor(
         private userId: string,
         private bearerToken: string,
         private msRefresh: number
     ) {
-        const t = new TwitterApi(this.bearerToken);
-        this.client = t.readOnly;
+      this.api = new TwitterApiWrapper(bearerToken)
     }
     getEventEmitter() {
         return this.event;
@@ -102,35 +102,11 @@ export class TwitterUser {
     }
 
     private async getUserTweets(options?: Options, nextToken?: string) {
-        const excluded = this.convertIncludeToExclude(options);
-        const user = await this.client.v2.userByUsername(this.userId);
-        const id = user.data.id;
-
-        // this function returns the user's post history
-        const tweets = await this.client.v2.userTimeline(id, {
-            max_results: 5, // use pagination
-            exclude: excluded,
-            pagination_token: nextToken
-        });
-        return tweets.data;
+      return this.api.getTweets(this.userId, options, nextToken);
     }
-    // delayed tweets ====================
     private async getCurrentTweet(options?: Options) {
-        const tweets = await this.getUserTweets(options);
-        if (tweets.meta.result_count < 1)
-            return undefined;
-        return tweets.data.at(0);
-    }
-    private convertIncludeToExclude(option?: { includeReplies: boolean, includeRetweets: boolean }) {
-        const included: ("replies" | "retweets")[] = ["replies", "retweets"];
-
-        if (option) {
-            const { includeReplies, includeRetweets } = option;
-            if (includeReplies) included.splice(0, 1);
-            if (includeRetweets) included.splice(1, 1);
-        }
-        return included;
-    }
+      return this.api.getCurrentTweet(this.userId, options)
+    } 
 
     ///////// needed methods //////////
     getJSON(): TwitterJSON {
@@ -148,7 +124,7 @@ export class TwitterUser {
 
 
 async function main() {
-    const tw = new TwitterUser("LilynHana", twitter_bearerToken, 10000);
+    const tw = new TwitterUser("LilynHana", bearer_token, 10000);
     for (let i = 0; i < 2; i++) {
         console.log( await tw.getDelayedTweets({ includeRetweets: true, includeReplies: false }) )
     }
