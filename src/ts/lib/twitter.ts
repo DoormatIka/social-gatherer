@@ -1,6 +1,11 @@
+<<<<<<< HEAD:src/ts/lib/socials/twitter/twitter.ts
 import { TweetV2PaginableTimelineResult, TweetV2 } from "twitter-api-v2";
 import { TwitterApiWrapper } from "./api"
 import { bearer_token } from "../../../../../secrets/api.json";
+=======
+import { TwitterApi, TwitterApiReadOnly, TweetV2PaginableTimelineResult, TweetV2 } from "twitter-api-v2";
+import { twitter_bearerToken } from "../../../secrets/api.json";
+>>>>>>> 5668a234a274c70dcab32e7e2c3dc072f4c43455:src/ts/lib/twitter.ts
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
 
