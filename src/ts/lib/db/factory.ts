@@ -1,7 +1,7 @@
-import { ManagerFactory, TwitchFactory } from "../twitch";
-import { TwitterFactory } from "../twitter";
-import { YoutubeFactory } from "../yt";
-
+import { TwitchFactory } from "../socials/twitch/twitch";
+import { TwitterFactory } from "../socials/twitter/twitter";
+import { YoutubeFactory } from "../socials/yt/yt";
+import { ManagerFactory } from "../socials/twitch/tokenmanager";
 
 export class Factory {
     private twitter = new TwitterFactory();

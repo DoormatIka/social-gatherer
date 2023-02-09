@@ -1,8 +1,9 @@
 // REFRACTORED TWITTER 
 import { TwitterState } from "./state";
-import { LiveTwitter } from "./twitter/live";
-import { DelayedTwitter } from "./twitter/delayed";
-import { bearer_token } from "../../../../secrets/api.json"
+import { LiveTwitter } from "./live";
+import { DelayedTwitter } from "./delayed";
+import { TwitterApiWrapper } from "./api";
+import { bearer_token } from "../../../../../secrets/api.json"
 type Options = {
     includeReplies: boolean,
     includeRetweets: boolean
@@ -28,19 +29,28 @@ interface TwitterMemory {
  * Recommended msRefresh: 30000ms / 30s (to avoid hitting rate-limits)
  */
 export class TwitterUser { 
-    private state: TwitterState
-    private live: LiveTwitter
-    private delayed: DelayedTwitter
-    private tweetId: string = ""
-    constructor(
-        private userId: string,
-        private bearerToken: string,
-        private msRefresh: number,
-    ) {
+  private state: TwitterState
+  private live: LiveTwitter
+  private delayed: DelayedTwitter
+  private tweetId: string = ""
+  constructor(
+    private userId: string,
+    private bearerToken: string,
+    private msRefresh: number,
+  ) {
+    console.log(this.bearerToken);
+      const api = new TwitterApiWrapper(this.bearerToken);
       this.state = new TwitterState({ tweetId: "" });
-      this.live = new LiveTwitter(this.state, this.msRefresh, this.userId, bearerToken);
-      this.delayed = new DelayedTwitter(this.state, this.userId);
-    }
+      this.live = new LiveTwitter(
+        this.state, 
+        this.msRefresh, 
+        this.userId, 
+        api);
+      this.delayed = new DelayedTwitter(
+        this.state, 
+        this.userId, 
+        api);
+  }
     getEventEmitter() {
       return this.live.getEventEmitter();
     }
@@ -67,7 +77,11 @@ export class TwitterUser {
 async function main() {
   const tw = new TwitterUser("LilynHana", bearer_token, 10000);
   tw.setJSON({ tweetid: "1621938660332519425" })
-  await tw.getDelayedTweets({ includeReplies: false, includeRetweets: true });
+  // await tw.getDelayedTweets({ includeReplies: false, includeRetweets: true });
+  await tw.enableTweetEvent()
+  const a = await tw.getEventEmitter();
+  a.on("tweeted", (t, s) => console.log(t, s)) 
+  // reset your twitter bearer Token or whatever
 }
 main()
 

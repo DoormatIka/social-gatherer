@@ -1,5 +1,5 @@
 import { TwitterApiWrapper } from "./api"
-import { TwitterState } from "../state";
+import { TwitterState } from "./state";
 
 type Options = {
     includeReplies: boolean,
@@ -8,13 +8,11 @@ type Options = {
 
 // connect it to the delayed functions
 export class DelayedTwitter {
-  private api: TwitterApiWrapper
   constructor(
     private state: TwitterState,
     private userId: string,
-  ) {
-    this.api = new TwitterApiWrapper("");
-  }
+    private api: TwitterApiWrapper
+  ) {}
   
   async getDelayedTweets(options?: Options) { 
     const currentTweet = await this.api.getCurrentTweet(this.userId);

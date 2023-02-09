@@ -1,6 +1,7 @@
-import { YouTubeChannel } from "./yt";
-import { TwitterUser } from "./twitter";
-import { TokenManager, TwitchUser } from "./twitch";
+import { YouTubeChannel } from "./socials/yt/yt";
+import { TwitterUser } from "./socials/twitter/twitter";
+import { TwitchUser } from "./socials/twitch/twitch";
+import { TokenManager } from "./socials/twitch/tokenmanager";
 
 type AllUsers = TwitterUser[] | TwitchUser[] | YouTubeChannel[] | TokenManager | undefined
 export function isYoutube(json: AllUsers): json is YouTubeChannel[] {

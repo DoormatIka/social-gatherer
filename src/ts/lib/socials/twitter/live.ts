@@ -1,5 +1,5 @@
 import { TwitterApiWrapper } from "./api"
-import { TwitterState } from "../state";
+import { TwitterState } from "./state";
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
 
@@ -13,15 +13,12 @@ type Options = {
 
 export class LiveTwitter { 
   private event = new EventEmitter() as TypedEmitter<TwitEvents>;
-  private api: TwitterApiWrapper;
   constructor(
     private state: TwitterState,
     private msRefresh: number,
     private userId: string,
-    bearerToken: string
-  ) {
-    this.api = new TwitterApiWrapper(bearerToken);
-  }
+    private api: TwitterApiWrapper,
+  ) {}
   async enableTweetEvent(options?: Options) {
     setInterval(async () => {
       // there needs to be state management between these classes.

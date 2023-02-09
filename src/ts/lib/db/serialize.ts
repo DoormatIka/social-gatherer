@@ -1,6 +1,7 @@
-import { YouTubeChannel, YoutubeSerializer } from "../yt";
-import { TwitterSerializer, TwitterUser } from "../twitter";
-import { ManagerSerializer, TokenManager, TwitchSerializer, TwitchUser } from "../twitch";
+import { YouTubeChannel, YoutubeSerializer } from "../socials/yt/yt";
+import { TwitterSerializer, TwitterUser } from "../socials/twitter/twitter";
+import { TwitchSerializer, TwitchUser } from "../socials/twitch/twitch";
+import { ManagerSerializer, TokenManager } from "../socials/twitch/tokenmanager";
 
 export class Serialize {
     private youtubeSerializer: YoutubeSerializer = new YoutubeSerializer();

@@ -1,10 +1,10 @@
 import { JsonDB, Config } from "node-json-db";
-import { YouTubeChannel, YoutubeJSON } from "../yt";
-import { TwitterJSON, TwitterUser } from "../twitter";
+import { YouTubeChannel, YoutubeJSON } from "../socials/yt/yt";
+import { TwitterJSON, TwitterUser } from "../socials/twitter/twitter";
 import { Factory } from "./factory";
 import { Serialize } from "./serialize";
-import { ManagerFactory, TokenManager, TwitchJSON, TwitchUser } from "../twitch";
-
+import { TwitchJSON, TwitchUser } from "../socials/twitch/twitch";
+import { TokenManager } from "../socials/twitch/tokenmanager";
 
 export class Cache {
     private db: JsonDB;
