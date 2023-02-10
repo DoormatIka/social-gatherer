@@ -51,6 +51,17 @@ export class TwitchUser {
   }
 }
 
+async function main() {
+  const manager = new TokenManager(twitch_clientID, twitch_clientSecret);
+  await manager.refreshToken();
+  const token = manager.getBearerToken();
+  if (token) {
+    const lilyn = new TwitchUser(twitch_clientID, "RTGame", token, 1000);
+    lilyn.enableStreamListener();
+    lilyn.getStreamListener().on("live", () => {})
+  }  
+}
+main()
 
 export class TwitchFactory {
     convertJSON(json: TwitchJSON[]) {

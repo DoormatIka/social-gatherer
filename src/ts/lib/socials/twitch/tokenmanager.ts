@@ -39,6 +39,7 @@ export class TokenManager {
   }
 
   private async getAuth(clientId: string, clientSecret: string): Promise<Auth> {
+    // TODO: fix this functioon, it's not getting the token.
     const auth = await axios.post(
     "https://id.twitch.tv/oauth2/token",
     new URLSearchParams({
