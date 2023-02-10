@@ -23,6 +23,7 @@ export class LiveTwitter {
     setInterval(async () => {
       // there needs to be state management between these classes.
       const currentTweet = await this.api.getCurrentTweet(this.userId, options);
+
       if (currentTweet) {
         this.state.setEmptyTweetId(currentTweet);
           // if memory tweetId is not equal to current tweetId

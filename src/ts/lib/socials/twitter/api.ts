@@ -6,7 +6,7 @@ type Options = {
 }
 export class TwitterApiWrapper {
   private client: TwitterApiReadOnly
-  constructor(private bearerToken: string) {
+  constructor(private bearerToken: string, private far?: number) {
     const t = new TwitterApi(bearerToken);
     this.client = t.readOnly;
   }
@@ -16,16 +16,19 @@ export class TwitterApiWrapper {
     const id = user.data.id;
     // this function returns the user's post history
     const tweets = await this.client.v2.userTimeline(id, {
-            max_results: 5, // use pagination
+            max_results: this.far ?? 5, // use pagination
             exclude: excluded,
             pagination_token: nextToken
         });
-        return tweets.data;
+    if (tweets.data.meta.result_count < 1) {
+        throw Error(`No tweets found using the options: ${options} ${tweets.errors}`)
+    }
+    return tweets.data;
   }
   async getCurrentTweet(userId: string, options?: Options) {
     const tw = await this.getTweets(userId, options);
-    if (tw.meta.result_count == 0)
-      return undefined;
+    if (tw.meta.result_count < 1)
+        throw Error(`No tweets found using the options: ${options}`)
     return tw.data.at(0)
   }
   getBearerToken() {

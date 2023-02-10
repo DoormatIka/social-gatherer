@@ -27,7 +27,7 @@ export class TokenManager {
     /**
      * **Should only be called once.**
      * It runs a function to refresh your Token every hour.
- g   */
+     */
   public async refreshToken() {
   // adds the bearerToken before refreshing it
     const auth = await this.getAuth(this.clientID, this.clientSecret);

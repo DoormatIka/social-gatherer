@@ -15,19 +15,22 @@ export class DelayedTwitter {
   ) {}
   
   async getDelayedTweets(options?: Options) { 
-    const currentTweet = await this.api.getCurrentTweet(this.userId);
+    const currentTweet = await this.api.getCurrentTweet(this.userId, options);
     if (!currentTweet) return;
         
     this.state.setEmptyTweetId(currentTweet);
-    const { tweets, foundIndex } = await this.fetchDelayedTweets(options);
-    return tweets.data.filter((_, i) => i < foundIndex);
+    return await this.fetchDelayedTweets(options);
   }
   private async fetchDelayedTweets(options?: Options) {
     let tweets, token
     let foundIndex: number;
     while (true) {
-      tweets = await this.api.getTweets(this.userId, options);
+      tweets = await this.api.getTweets(this.userId, options, token);
       foundIndex = tweets.data.findIndex(v => v.id === this.state.data.tweetId);
+
+      // console.log(foundIndex, tweets)
+      // keeps repeating, not paginated.
+
       token = tweets.meta?.next_token;
       if (foundIndex !== -1) {
         const latestTweet = tweets.data.at(0);
@@ -39,6 +42,6 @@ export class DelayedTwitter {
       if (!token) break;
     }
 
-    return { tweets, foundIndex };
+    return tweets.data.filter((_, i) => i < foundIndex);
   }
 }

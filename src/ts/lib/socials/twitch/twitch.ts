@@ -18,7 +18,7 @@ export type TwitchJSON = {
  * @param msRefresh - time interval (ms) to refresh the API for updates
  * @param username - name of the channel you're tracking
  * 
- * Recommended msRefresh - 15000ms / 15s
+ * Recommended msRefresh - 20000ms / 20s
  */
 export class TwitchUser {
   private api: TwitchAPI
@@ -31,6 +31,9 @@ export class TwitchUser {
   ) {
     this.api = new TwitchAPI(this.username, this.clientID, this.bearerToken);
     this.live = new TwitchLive(this.api, this.msRefresh);
+    if (this.msRefresh < 20000) {
+        console.log(`${this.toString()} || msRefresh is too low! It should be above 20000ms`)
+    }
   }
   
   getStreamListener() {
@@ -39,7 +42,10 @@ export class TwitchUser {
   async enableStreamListener() {
     await this.live.enableStreamListener();
   }
- 
+  toString() {
+    return `TwitchUser (${this.username}) [Refresh (ms): ${this.msRefresh}]`
+  }
+
   ////////// needed methods ////////////
   getJSON(): TwitchJSON {
     return {
@@ -58,8 +64,9 @@ async function main() {
   if (token) {
     const lilyn = new TwitchUser(twitch_clientID, "RTGame", token, 1000);
     lilyn.enableStreamListener();
+    console.log(`Listening to ${lilyn.toString()}`)
     lilyn.getStreamListener().on("live", () => {})
-  }  
+  }
 }
 main()
 
