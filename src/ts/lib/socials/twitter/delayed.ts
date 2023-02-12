@@ -28,9 +28,6 @@ export class DelayedTwitter {
       tweets = await this.api.getTweets(this.userId, options, token);
       foundIndex = tweets.data.findIndex(v => v.id === this.state.data.tweetId);
 
-      // console.log(foundIndex, tweets)
-      // keeps repeating, not paginated.
-
       token = tweets.meta?.next_token;
       if (foundIndex !== -1) {
         const latestTweet = tweets.data.at(0);
