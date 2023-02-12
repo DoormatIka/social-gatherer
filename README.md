@@ -5,7 +5,9 @@ Right now, it only has events for when you post... I'll add more when I have tim
 
 ## Important
 Work in Progress!
-I should add a no-API option..
+
+Due to recent changes in Twitter's API (making it pay-to-use), I decided to switch from API to scraping.
+Scraping will use puppeteer-core as a library so make sure you have chrome installed for this!
 
 ## Installation
 Requirements: `node, git` and some amount of patience. (my dumbass doesnt know how to publish an npm module)
