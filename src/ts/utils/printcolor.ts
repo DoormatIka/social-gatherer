@@ -32,7 +32,7 @@ export enum Background {
     gray = "\x1b[100m",
 }
 
-class Color {
+export class Color {
   public fg?: Foreground
   public bg?: Background
   constructor(
@@ -42,6 +42,21 @@ class Color {
     this.bg = parameters.bg;
   }
 }
+
+/**
+ * Color your text to use in console.log
+ * @param s - string to color
+ * @param colors - Color classes
+ * @returns the colored string
+ * @example
+ * ```ts
+ * const colored = colorlog(
+ *   "color %>colored red%<",
+ *   new Color({fg: Foreground.red})
+ * );
+ * console.log(colored);
+ * ```
+ */
 export function colorlog(s: string, ...colors: Color[]) {
   return s
     .split("%<")
@@ -50,18 +65,6 @@ export function colorlog(s: string, ...colors: Color[]) {
       const fg = colors.at(i)?.fg ?? ""
       return val
         .replace("%>", `${bg}${fg}`) + Colors.reset
-    }) 
-    .join("")
+    })
+    .join("");
 }
-
-function colorizeText() {}
-function colorizeJSON() {}
-function formatJSON() {}
-
-console.log(
-  colorlog(
-    "%>[WARN]%<: You did a %>very%< bad.",
-    new Color({bg: Background.yellow, fg: Foreground.black}),
-    new Color({fg: Foreground.red})
-  )
-)

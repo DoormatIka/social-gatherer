@@ -3,14 +3,14 @@ import { TwitterState } from "./state";
 import { LiveTwitter } from "./live";
 import { DelayedTwitter } from "./delayed";
 import { TwitterApiWrapper } from "./api";
-import { twitter_bearerToken } from "../../../../../secrets/api.json"
+import { Background, Color, Foreground, colorlog } from "../../../utils/printcolor";
+import { User, UserJSON } from "../user";
 type Options = {
     includeReplies: boolean,
     includeRetweets: boolean
 }
-export interface TwitterJSON {
+export interface TwitterJSON extends UserJSON {
     bearerToken: string,
-    userId: string,
     msRefresh: number,
     memory: TwitterMemory,
 }
@@ -19,7 +19,7 @@ interface TwitterMemory {
 }
 
 /**
- * USES THE TWITTER API, WILL CONVERT TO SCRAPER SOON
+ * USES THE TWITTER API.
  *
  * Twitter class to interact with the Twitter API
  * @param bearerToken - the bearer token found in the developer website
@@ -28,7 +28,8 @@ interface TwitterMemory {
  * 
  * Recommended msRefresh: 30000ms / 30s (to avoid hitting rate-limits)
  */
-export class TwitterUser { 
+export class TwitterUser implements User<TwitterJSON, TwitterMemory> {
+  private path = "/twitter"
   public state: TwitterState
   private live: LiveTwitter
   private delayed: DelayedTwitter
@@ -49,9 +50,10 @@ export class TwitterUser {
       this.userId, 
       api);
     if (this.msRefresh < 30000) {
-      // make a function for colors
-      // https://stackoverflow.com/questions/9781218/how-to-change-node-jss-console-font-color
-      console.log(`\x1b[33m[WARN]\x1b[0m ${this.toString()} || msRefresh is too low! It should be above 30000ms`)
+      console.log(colorlog(
+        `%>[WARN]%<: ${this.toString()} | %>msRefresh too low!%< Should be above %>30000ms%<.`,
+        new Color({bg: Background.red}), new Color({fg: Foreground.yellow}), new Color({fg: Foreground.yellow})
+      ))
     }
   }
   getEventEmitter() {
@@ -78,35 +80,20 @@ export class TwitterUser {
   setJSON(memory: TwitterMemory) {
     this.state.data.tweetId = memory.tweetid;
   }
+  getPath() {
+    return this.path;
+  }
 }
-/*
-async function main() { // Unauthorized
-  const tw = new TwitterUser("LilynHana", twitter_bearerToken, 10000);
-  // tw.setJSON({ tweetid: "1623708329930551297" })
-  const delayedTweets = await tw.getDelayedTweets({ includeReplies: false, includeRetweets: true });
-  console.dir(`Starting: ${JSON.stringify(delayedTweets, undefined, 2)}`, { depth: 3 })
-}
-main()
-*/
 
 export class TwitterFactory {
     convertJSON(json: TwitterJSON[]) {
         const tw: TwitterUser[] = [];
         for (const j of json) {
+            // inject the Scraper here
             const init = new TwitterUser(j.userId, j.bearerToken, j.msRefresh);
             init.setJSON(j.memory)
             tw.push(init);
         }
         return tw;
-    }
-}
-
-export class TwitterSerializer {
-    convertObject(yt: TwitterUser[]) {
-        const json: TwitterJSON[] = [];
-        for (const y of yt) {
-            json.push(y.getJSON())
-        }
-        return json;
     }
 }

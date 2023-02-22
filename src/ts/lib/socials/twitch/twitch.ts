@@ -1,12 +1,10 @@
 import { TwitchAPI } from "./api";
 import { TwitchLive } from "./live";
+import { Background, Color, Foreground, colorlog } from "../../../utils/printcolor";
+import { User, UserJSON } from "../user";
 
-import { twitch_clientID, twitch_clientSecret } from "../../../../../secrets/api.json"
-import {TokenManager} from "./tokenmanager";
-
-export type TwitchJSON = {
+export interface TwitchJSON extends UserJSON {
     clientID: string,
-    username: string,
     bearerToken: string,
     msRefresh: number,
 }
@@ -20,7 +18,8 @@ export type TwitchJSON = {
  * 
  * Recommended msRefresh - 20000ms / 20s
  */
-export class TwitchUser {
+export class TwitchUser implements User<TwitchJSON, unknown> {
+  private path = "/twitch"
   private api: TwitchAPI
   private live: TwitchLive
   constructor(
@@ -32,7 +31,10 @@ export class TwitchUser {
     this.api = new TwitchAPI(this.username, this.clientID, this.bearerToken);
     this.live = new TwitchLive(this.api, this.msRefresh);
     if (this.msRefresh < 20000) {
-        console.log(`${this.toString()} || msRefresh is too low! It should be above 20000ms`)
+      console.log(colorlog(
+        `%>[WARN]%<: ${this.toString()} | %>msRefresh too low!%< Should be above %>20000ms%<.`,
+        new Color({bg: Background.red}), new Color({fg: Foreground.yellow}), new Color({fg: Foreground.yellow})
+      ))
     }
   }
   
@@ -50,34 +52,19 @@ export class TwitchUser {
   getJSON(): TwitchJSON {
     return {
       clientID: this.clientID,
-      username: this.username,
+      userId: this.username,
       bearerToken: this.bearerToken,
       msRefresh: this.msRefresh
     }
   }
-}
-
-async function main() {
-  const manager = new TokenManager(twitch_clientID, twitch_clientSecret);
-  await manager.refreshToken();
-  const token = manager.getBearerToken();
-  if (token) {
-    const lilyn = new TwitchUser(twitch_clientID, "RTGame", token, 1000);
-    lilyn.enableStreamListener();
-    console.log(`Listening to ${lilyn.toString()}`)
-    lilyn.getStreamListener().on("live", () => {})
+  getPath() {
+    return this.path;
   }
+  setJSON(memory: unknown) {};
 }
-main()
 
 export class TwitchFactory {
     convertJSON(json: TwitchJSON[]) {
-        return json.map(c => new TwitchUser(c.clientID, c.username, c.bearerToken, c.msRefresh));
+        return json.map(c => new TwitchUser(c.clientID, c.userId, c.bearerToken, c.msRefresh));
     }
 }
-export class TwitchSerializer {
-    convertObject(tc: TwitchUser[]) {
-        return tc.map(c => c.getJSON());
-    }
-}
-

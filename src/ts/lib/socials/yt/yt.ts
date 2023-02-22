@@ -1,16 +1,15 @@
 import YTCH from "yt-channel-info";
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
-
+import { User, UserJSON } from "../user";
 
 type YouTubeEvents = {
     newUpload: (id: string, author: string, title: string, duration: string) => void,
 }
-type YoutubeMemory = {
+interface YoutubeMemory {
     previousVideoID: string,
 }
-export type YoutubeJSON = {
-    channelID: string,
+export interface YoutubeJSON extends UserJSON {
     msRefresh: number,
     memory: YoutubeMemory,
 }
@@ -24,7 +23,8 @@ export type YoutubeJSON = {
  * @param memory - an array to store the YoutubeChannels
  *
  */
-export class YouTubeChannel {
+export class YouTubeChannel implements User<YoutubeJSON, YoutubeMemory> {
+    private path = "/youtube";
     private event: TypedEmitter<YouTubeEvents>
     private previousVideoID: string = ""
     constructor(
@@ -134,7 +134,7 @@ export class YouTubeChannel {
     ////////// needed methods ///////////
     getJSON(): YoutubeJSON {
         return { 
-            channelID: this.channelID,
+            userId: this.channelID,
             msRefresh: this.msRefresh,
             memory: { previousVideoID: this.previousVideoID },
         };
@@ -142,26 +142,20 @@ export class YouTubeChannel {
     setJSON(memory: YoutubeMemory) {
         this.previousVideoID = memory.previousVideoID
     }
+    getPath() {
+        return this.path;
+    }
 }
 
 export class YoutubeFactory {
     convertJSON(json: YoutubeJSON[]) {
         const tw: YouTubeChannel[] = [];
         for (const j of json) {
-            const init = new YouTubeChannel(j.channelID, j.msRefresh);
+            const init = new YouTubeChannel(j.userId, j.msRefresh);
             init.setJSON(j.memory)
             tw.push(init);
         }
         return tw;
-    }
-}
-export class YoutubeSerializer {
-    convertObject(yt: YouTubeChannel[]) {
-        const json: YoutubeJSON[] = [];
-        for (const y of yt) {
-            json.push(y.getJSON())
-        }
-        return json;
     }
 }
 

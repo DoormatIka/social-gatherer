@@ -3,7 +3,9 @@ import { TwitterFactory } from "../socials/twitter/twitter";
 import { YoutubeFactory } from "../socials/yt/yt";
 import { ManagerFactory } from "../socials/twitch/tokenmanager";
 
-export class Factory {
+export class Factory { 
+    // coupler
+    // use an 
     private twitter = new TwitterFactory();
     private youtube = new YoutubeFactory();
     private twitch = new TwitchFactory();

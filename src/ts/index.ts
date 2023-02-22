@@ -24,3 +24,15 @@ export {
 
     isYoutube, isTwitter, isTwitch, isManager
 }
+
+async function main() {
+    const db = new Cache();
+    const tw = new TwitterUser("LilynHana", "???", 95000);
+    const tw2 = new TwitterUser("lfnsdlkf", "?????", 50000);
+    const tw3 = new TwitterUser("fksjdbfds", "??", 10000);
+    const a  = new YouTubeChannel("Lilyn", 50000);
+
+    await db.push(tw, tw2, tw3);
+    await db.push(a);
+}
+main()
