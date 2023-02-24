@@ -25,6 +25,7 @@ export class TwitterApiWrapper {
     }
     return tweets.data;
   }
+
   async getCurrentTweet(userId: string, options?: Options) {
     const tw = await this.getTweets(userId, options);
     if (tw.meta.result_count < 1)

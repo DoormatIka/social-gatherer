@@ -1,7 +1,7 @@
 import { JsonDB, Config } from "node-json-db";
 import { YouTubeChannel, YoutubeJSON } from "../socials/yt/yt";
 import { TwitterJSON, TwitterUser } from "../socials/twitter/twitter";
-import { User, UserJSON } from "../socials/user";
+import { User, UserJSON } from "../socials/base";
 import { Factory } from "./factory";
 import { TwitchJSON, TwitchUser } from "../socials/twitch/twitch";
 import { TokenManager } from "../socials/twitch/tokenmanager";
@@ -13,7 +13,7 @@ export class Cache {
     constructor(filename?: string) {
         this.db = new JsonDB(new Config(filename ?? "data", true, false, "/"))
     }
-    async get(path: "youtube" | "twitter" | "twitch") {
+    async get(path: "youtube" | "twitter" | "twitch" | "twitscrape") {
         if (!await this.db.exists(`/${path}`)) return;
         return this.factory.convertJSON(path, await this.db.getData(`/${path}`));
     }

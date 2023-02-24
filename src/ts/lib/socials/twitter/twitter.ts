@@ -1,10 +1,10 @@
 // REFRACTORED TWITTER 
-import { TwitterState } from "./state";
-import { LiveTwitter } from "./live";
-import { DelayedTwitter } from "./delayed";
-import { TwitterApiWrapper } from "./api";
+import { TwitterState } from "./api/state";
+import { LiveTwitter } from "./api/live";
+import { DelayedTwitter } from "./api/delayed";
+import { TwitterApiWrapper } from "./api/api";
 import { Background, Color, Foreground, colorlog } from "../../../utils/printcolor";
-import { User, UserJSON } from "../user";
+import { User, UserJSON } from "../base";
 type Options = {
     includeReplies: boolean,
     includeRetweets: boolean
@@ -87,13 +87,10 @@ export class TwitterUser implements User<TwitterJSON, TwitterMemory> {
 
 export class TwitterFactory {
     convertJSON(json: TwitterJSON[]) {
-        const tw: TwitterUser[] = [];
-        for (const j of json) {
-            // inject the Scraper here
-            const init = new TwitterUser(j.userId, j.bearerToken, j.msRefresh);
-            init.setJSON(j.memory)
-            tw.push(init);
-        }
-        return tw;
+        return json.map(v => {
+            const init = new TwitterUser(v.userId, v.bearerToken, v.msRefresh);
+            init.setJSON(v.memory);
+            return init;
+        })
     }
 }

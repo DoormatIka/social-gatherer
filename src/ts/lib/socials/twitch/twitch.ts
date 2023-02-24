@@ -1,7 +1,7 @@
 import { TwitchAPI } from "./api";
 import { TwitchLive } from "./live";
 import { Background, Color, Foreground, colorlog } from "../../../utils/printcolor";
-import { User, UserJSON } from "../user";
+import { User, UserJSON } from "../base";
 
 export interface TwitchJSON extends UserJSON {
     clientID: string,

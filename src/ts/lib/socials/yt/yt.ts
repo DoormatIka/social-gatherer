@@ -1,7 +1,7 @@
 import YTCH from "yt-channel-info";
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
-import { User, UserJSON } from "../user";
+import { User, UserJSON } from "../base";
 
 type YouTubeEvents = {
     newUpload: (id: string, author: string, title: string, duration: string) => void,
@@ -149,13 +149,11 @@ export class YouTubeChannel implements User<YoutubeJSON, YoutubeMemory> {
 
 export class YoutubeFactory {
     convertJSON(json: YoutubeJSON[]) {
-        const tw: YouTubeChannel[] = [];
-        for (const j of json) {
-            const init = new YouTubeChannel(j.userId, j.msRefresh);
-            init.setJSON(j.memory)
-            tw.push(init);
-        }
-        return tw;
+        return json.map(v => {
+            const init = new YouTubeChannel(v.userId, v.msRefresh);
+            init.setJSON(v.memory);
+            return init;
+        })
     }
 }
 
