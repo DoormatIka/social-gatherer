@@ -49,29 +49,4 @@ export class TokenManager {
     }))
     return auth.data;
   }
-
-  /////// needed methods ////////
-  getJSON() {
-    return {
-      clientID: this.clientID,
-      clientSecret: this.clientSecret,
-    }
-  }
-}
-
-
-type TokenManagerJSON = {
-    clientID: string,
-    clientSecret: string,
-}
-
-export class ManagerFactory {
-    convertJSON(json: TokenManagerJSON) {
-        return new TokenManager(json.clientID, json.clientSecret);
-    }
-}
-export class ManagerSerializer {
-    convertObject(mgs: TokenManager): TokenManagerJSON {
-        return mgs.getJSON()
-    }
 }

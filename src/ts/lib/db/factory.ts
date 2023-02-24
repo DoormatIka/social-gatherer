@@ -1,7 +1,6 @@
 import { TwitchFactory } from "../socials/twitch/twitch";
 import { TwitterFactory } from "../socials/twitter/twitter";
 import { YoutubeFactory } from "../socials/yt/yt";
-import { ManagerFactory } from "../socials/twitch/tokenmanager";
 import { TwitterScraperFactory } from "../socials/twitter/scraper";
 
 export class Factory { 
@@ -10,7 +9,6 @@ export class Factory {
     private twitter = new TwitterFactory();
     private youtube = new YoutubeFactory();
     private twitch = new TwitchFactory();
-    private tokenManager = new ManagerFactory();
     private twitscraper = new TwitterScraperFactory();
 
     convertJSON(type: "twitter" | "youtube" | "twitch" | "twitscrape", json: Array<any>) {
@@ -22,8 +20,5 @@ export class Factory {
             return this.twitch.convertJSON(json)
         if (type === "twitscrape")
             return this.twitscraper.convertJSON(json)
-    }
-    convertSingularJSON(type: "manager", json: any) {
-        return this.tokenManager.convertJSON(json);
     }
 }
